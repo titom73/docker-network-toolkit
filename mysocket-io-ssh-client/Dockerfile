@@ -1,10 +1,13 @@
-FROM alpine:3.5
+# FROM alpine:3.5
+FROM titom73/network-multitool:latest
 MAINTAINER Thomas Grimonet <thomas.grimonet@gmail.com>
+
 # Arguement for Password
 ARG PASSWORD=ansible
 ARG USERNAME=ansible
+
 # Installing the openssh and bash package, removing the apk cache
-RUN apk --update add --no-cache openssh bash tmux screen\
+RUN apk --update add --no-cache openssh bash tmux screen nmap open-lldp\
   && sed -i s/#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config \
   && echo "root:${PASSWORD}" | chpasswd \
   && rm -rf /var/cache/apk/*
