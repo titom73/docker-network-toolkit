@@ -1,6 +1,6 @@
 # SSH Client for mysocket-io
 
-A small Alpine linux with SSH client to act as mysocket-io client to share remote access to lab.
+A small Alpine linux with SSH client to act as mysocket-io client to share remote access to lab using containerlab.
 
 ```yaml
 topology:

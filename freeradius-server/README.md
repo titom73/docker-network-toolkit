@@ -12,10 +12,12 @@ ATTRIBUTE       Arista-CVP-Role                 4       string
 ATTRIBUTE       Arista-Command                  5       string
 ```
 
+Container runs freeradius in debug mode (`-X`) to print out requests and responses in `docker logs`
+
 ## Build Commands
 
 ```shell
-$ docker build -t titom73/radius:arista .
+$ docker build -t titom73/radius:0.3.0 .
 Sending build context to Docker daemon  5.632kB
 Step 1/2 : FROM freeradius/freeradius-server:latest
 latest: Pulling from freeradius/freeradius-server
@@ -32,10 +34,10 @@ Status: Downloaded newer image for freeradius/freeradius-server:latest
 Step 2/2 : COPY raddb/ /etc/raddb/
  ---> f67bd5b2e15a
 Successfully built f67bd5b2e15a
-Successfully tagged titom73/radius:arista
+Successfully tagged titom73/radius:0.3.0
 
 
-$ docker push titom73/radius:arista
+$ docker push titom73/radius:0.3.0
 The push refers to repository [docker.io/titom73/radius]
 11d8e95eba2c: Pushed
 a5d47849ff0e: Mounted from freeradius/freeradius-server
@@ -45,7 +47,7 @@ a5d47849ff0e: Mounted from freeradius/freeradius-server
 6597da2e2e52: Mounted from freeradius/freeradius-server
 977183d4e999: Mounted from freeradius/freeradius-server
 c8be1b8f4d60: Mounted from freeradius/freeradius-server
-arista: digest: sha256:09aed4d155b3737f214b74fb19473d1e75572f7546a585ddee3f02c616bac484 size: 1989
+0.3.0: digest: sha256:09aed4d155b3737f214b74fb19473d1e75572f7546a585ddee3f02c616bac484 size: 1989
 ```
 
 ## Run commands
@@ -53,7 +55,7 @@ arista: digest: sha256:09aed4d155b3737f214b74fb19473d1e75572f7546a585ddee3f02c61
 ### Manage container
 
 ```shell
-$ docker run -d -t --name freeradius -p 1812:1812/udp -p 1813:1813/udp titom73/radius:arista -X
+$ docker run -d -t --name freeradius -p 1812:1812/udp -p 1813:1813/udp titom73/radius:0.3.0
 
 $ docker logs freeradius
 
@@ -78,3 +80,11 @@ topology:
       binds:
         - radius_authorize:/etc/raddb/mods-config/files/authorize
 ```
+
+## Build Process
+
+Makefile with following options:
+
+- `build`:  Build image locally
+- `help`:  Display help message (*: main entry points / []: part of an entry point)
+- `push`:  Push image to remote registry
