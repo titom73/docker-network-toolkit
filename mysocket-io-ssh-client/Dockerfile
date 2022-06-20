@@ -1,10 +1,10 @@
-# FROM alpine:3.5
-FROM titom73/network-multitool:latest
+FROM alpine:3.13
 MAINTAINER Thomas Grimonet <thomas.grimonet@gmail.com>
 
+# Expose SSH port
+EXPOSE 22
 # Arguement for Password
-ARG PASSWORD=ansible
-ARG USERNAME=ansible
+ARG PASSWORD=password123
 
 # Installing the openssh and bash package, removing the apk cache
 RUN apk --update add --no-cache openssh bash tmux screen nmap open-lldp\
@@ -24,13 +24,5 @@ RUN echo "TrustedUserCAKeys /etc/ssh/ca.pub" >>/etc/ssh/sshd_config \
     && mkdir ~root/.ssh \
     && echo "mysocket_ssh_signed" > ~root/.ssh/authorized_principals
 
-RUN adduser -D -u 1000 ${USERNAME} \
-    && echo "${USERNAME}:${PASSWORD}" | chpasswd
-USER ${USERNAME}
-WORKDIR /home/${USERNAME}
-# RUN mkdir ~${USERNAME}/.ssh \
-#     && echo "mysocket_ssh_signed" > ~${USERNAME}/.ssh/authorized_principals
-
 USER root
-EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]

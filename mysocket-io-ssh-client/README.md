@@ -6,7 +6,7 @@ A small Alpine linux with SSH client to act as mysocket-io client to share remot
 topology:
   nodes:
     management:
-        image: titom73/mysocket-io-ssh-client:0.2.0
+        image: titom73/mysocket-io-ssh-remote:0.2.0
         mgmt_ipv4: 192.168.1.10
         kind: linux
         publish:
@@ -20,13 +20,29 @@ topology:
 
 Username and password are configured like this:
 
-- Username: `ansible`
-- Password: `ansible`
+- Username: `root`
+- Password: `password123`
 
 It can be changed with Docker ARG build arguments:
 
 ```docker
 # Arguement for Password
-ARG PASSWORD=ansible
-ARG USERNAME=ansible
+ARG PASSWORD=root
+ARG USERNAME=<your password>
 ```
+
+Or by using Makefile:
+
+```bash
+$ make build DOCKER_ARGS='--build-arg PASSWORD=<your-password-secure>'
+```
+
+## Build Process
+
+Makefile with following options:
+
+- `build`:  Build image locally
+- `help`:  Display help message (*: main entry points / []: part of an entry point)
+- `push`:  Push image to remote registry
+- `test`:  Start a container in daemon mode
+

@@ -1,6 +1,8 @@
 FROM alpine:3.13
 
 EXPOSE 80 443 1180 11443
+# Arguement for Password
+ARG PASSWORD=password123
 
 # Install some tools in the container and generate self-signed SSL certificates.
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
@@ -8,6 +10,7 @@ RUN     apk update \
     &&  apk add bash bind-tools busybox-extras curl \
                 iproute2 iputils jq mtr \
                 net-tools nginx openssl \
+                openssh bash tmux screen nmap \
                 perl-net-telnet procps tcpdump tcptraceroute wget libteam open-lldp\
     &&  mkdir /certs /docker \
     &&  chmod 700 /certs \
@@ -15,12 +18,28 @@ RUN     apk update \
         -x509 -newkey rsa:2048 -nodes -days 3650 \
         -keyout /certs/server.key -out /certs/server.crt -subj '/CN=localhost'
 
+# Installing the openssh and bash package, removing the apk cache
+RUN sed -i s/#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config \
+  && echo "root:${PASSWORD}" | chpasswd \
+  && rm -rf /var/cache/apk/*
+
+# Defining the Port 22 for service
+RUN sed -ie 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
+RUN /usr/bin/ssh-keygen -A
+RUN ssh-keygen -t rsa -b 4096 -f  /etc/ssh/ssh_host_key
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
+
+# Configure CA for SSH
+RUN echo "TrustedUserCAKeys /etc/ssh/ca.pub" >>/etc/ssh/sshd_config \
+    && echo "AuthorizedPrincipalsFile %h/.ssh/authorized_principals" >>/etc/ssh/sshd_config \
+    && mkdir ~root/.ssh \
+    && echo "mysocket_ssh_signed" > ~root/.ssh/authorized_principals
 
 # Copy a simple index.html to eliminate text (index.html) noise which comes with default nginx image.
 # (I created an issue for this purpose here: https://github.com/nginxinc/docker-nginx/issues/234)
 
 COPY index.html /usr/share/nginx/html/
-
 
 # Copy a custom/simple nginx.conf which contains directives
 #   to redirected access_log and error_log to stdout and stderr.

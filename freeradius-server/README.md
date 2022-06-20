@@ -2,6 +2,16 @@
 
 - Generated from: [freeradius/freeradius-server](https://hub.docker.com/r/freeradius/freeradius-server/)
 
+Arista Radius directory:
+
+```
+ATTRIBUTE       Arista-AVPair                   1       string
+ATTRIBUTE       Arista-User-Priv-Level          2       integer
+ATTRIBUTE       Arista-User-Role                3       string
+ATTRIBUTE       Arista-CVP-Role                 4       string
+ATTRIBUTE       Arista-Command                  5       string
+```
+
 ## Build Commands
 
 ```shell
@@ -54,4 +64,17 @@ $ docker rm -f freeradius
 
 ```shell
 $ radtest ansible cvpuser 172.17.0.2 0 testing123
+```
+
+### Containerlab integration
+
+```yaml
+topology:
+  nodes:
+    radius:
+      image: titom73/radius:arista
+      mgmt_ipv4: 172.16.0.2
+      kind: linux
+      binds:
+        - radius_authorize:/etc/raddb/mods-config/files/authorize
 ```
