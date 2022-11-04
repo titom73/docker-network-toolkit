@@ -9,7 +9,7 @@ A simple repository with various Dockerfile to build different network services:
 
 ```bash
 # Latest small image
-docker pull titom73/network-multitool
+docker pull titom73/multitool
 ```
 
 - A simple [SSH Jumphost](mysocket-io-ssh-client) to use with mysocket.io & containerlabs: ``
