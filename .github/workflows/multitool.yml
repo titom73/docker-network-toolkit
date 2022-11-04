@@ -1,0 +1,37 @@
+---
+name: Build docker image
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "10 2 * * 0"
+
+jobs:
+  # If on main branch, build and release image.
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image.
+        uses: docker/build-push-action@v3
+        with:
+          context: multitool/
+          file: multitool/Dockerfile
+          platforms: linux/386,linux/amd64,linux/arm/v7,linux/arm64,linux/ppc64le
+          push: true
+          tags: ${{ secrets.DOCKER_IMAGE_MULTITOOL }}:latest

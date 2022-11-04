@@ -17,9 +17,6 @@ __Initial image comes from [@hellt Multitool image](https://github.com/hellt/Net
 * tcpdump
 * jq
 * bash
-
-## Tools included in "extra":
-All tools from "minimal", plus:
 * iperf3
 * ethtool, mii-tool, route
 * nmap
@@ -27,9 +24,6 @@ All tools from "minimal", plus:
 * tshark
 * ssh-server
 * ssh client, lftp client, rsync, scp
-* netcat (nc), socat
-* ApacheBench (ab)
-* mysql & postgresql client
 * git
 
 ## Username & password for ssh

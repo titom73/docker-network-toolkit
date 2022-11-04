@@ -1,17 +1,18 @@
 FROM alpine:3.13
 
 EXPOSE 80 443 1180 11443
+
 # Arguement for Password
 ARG PASSWORD=password123
 
 # Install some tools in the container and generate self-signed SSL certificates.
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
 RUN     apk update \
-    &&  apk add bash bind-tools busybox-extras curl \
-                iproute2 iputils jq mtr \
-                net-tools nginx openssl \
-                openssh bash tmux screen nmap \
-                perl-net-telnet procps tcpdump tcptraceroute wget libteam open-lldp\
+    &&  apk add apache2-utils bash bind-tools busybox-extras curl ethtool git \
+                iperf3 iproute2 iputils jq lftp mtr mysql-client \
+                netcat-openbsd net-tools nginx  tmux screen nmap openssh-client openssl \
+                perl-net-telnet postgresql-client procps rsync socat tcpdump tshark wget openssh libteam open-lldp tcptraceroute\
+
     &&  mkdir /certs /docker \
     &&  chmod 700 /certs \
     &&  openssl req \
@@ -50,11 +51,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY entrypoint.sh /docker/entrypoint.sh
 
-
-# Start nginx in foreground:
-CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
-
-
 # Note: If you have not included the "bash" package, then it is "mandatory" to add "/bin/sh"
 #         in the ENTNRYPOINT instruction.
 #       Otherwise you will get strange errors when you try to run the container.
@@ -63,3 +59,36 @@ CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
 
 # Run the startup script as ENTRYPOINT, which does few things and then starts nginx.
 ENTRYPOINT ["/bin/sh", "/docker/entrypoint.sh"]
+
+# Start nginx in foreground:
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
+
+###################################################################################################
+
+# Build and Push (to dockerhub) instructions:
+# -------------------------------------------
+# docker build -t local/network-multitool .
+# docker tag local/network-multitool titom73/multitool
+# docker login
+# docker push titom73/multitool
+
+
+# Pull (from dockerhub):
+# ----------------------
+# docker pull titom73/multitool
+
+
+# Usage - on Docker:
+# ------------------
+# docker run --rm -it titom73/multitool /bin/bash
+# OR
+# docker run -d  titom73/multitool
+# OR
+# docker run -p 80:80 -p 443:443 -d  titom73/multitool
+# OR
+# docker run -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -p 1180:1180 -p 11443:11443 -d  titom73/multitool
+
+
+# Usage - on Kubernetes:
+# ---------------------
+# kubectl run multitool --image=titom73/multitool
