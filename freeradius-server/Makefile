@@ -1,5 +1,5 @@
 
-IMAGE_NAME ?= titom73/radius
+IMAGE_NAME ?= titom73/freeradius
 IMAGE_TAG ?= dev
 
 .PHONY: build
