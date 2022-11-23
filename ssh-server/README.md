@@ -8,7 +8,7 @@ A small Alpine linux with SSH client to act as mysocket-io client to share remot
 topology:
   nodes:
     management:
-        image: titom73/sshserver
+        image: titom73/ssh-server
         mgmt_ipv4: 192.168.1.10
         kind: linux
         publish:

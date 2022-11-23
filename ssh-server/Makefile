@@ -1,5 +1,5 @@
 
-IMAGE_NAME ?= titom73/sshserver
+IMAGE_NAME ?= titom73/ssh-server
 IMAGE_TAG ?= dev
 DOCKER_ARGS ?=
 

@@ -15,7 +15,7 @@ docker pull titom73/multitool
 - A simple [SSH Jumphost](ssh-server) to use with mysocket.io & containerlabs:
 
 ```bash
-docker pull titom73/sshserver:latest
+docker pull titom73/ssh-server:latest
 ```
 
 - A simple [Freeradius](freeradius-server) server:
