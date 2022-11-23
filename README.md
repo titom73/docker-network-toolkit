@@ -12,10 +12,10 @@ A simple repository with various Dockerfile to build different network services:
 docker pull titom73/multitool
 ```
 
-- A simple [SSH Jumphost](mysocket-io-ssh-client) to use with mysocket.io & containerlabs: ``
+- A simple [SSH Jumphost](ssh-server) to use with mysocket.io & containerlabs:
 
 ```bash
-docker pull titom73/mysocket-io-ssh-client:0.3.0
+docker pull titom73/sshserver:latest
 ```
 
 - A simple [Freeradius](freeradius-server) server:

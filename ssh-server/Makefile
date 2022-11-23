@@ -1,5 +1,5 @@
 
-IMAGE_NAME ?= titom73/ssh-mysocket-io
+IMAGE_NAME ?= titom73/sshserver
 IMAGE_TAG ?= dev
 DOCKER_ARGS ?=
 

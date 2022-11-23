@@ -1,12 +1,14 @@
 # SSH Client for mysocket-io
 
+> Feature in [containerlab is not working](https://containerlab.dev/manual/published-ports/) since my-socket.io has been rebranded border0
+
 A small Alpine linux with SSH client to act as mysocket-io client to share remote access to lab using containerlab.
 
 ```yaml
 topology:
   nodes:
     management:
-        image: titom73/mysocket-io-ssh-remote:0.2.0
+        image: titom73/sshserver
         mgmt_ipv4: 192.168.1.10
         kind: linux
         publish:
