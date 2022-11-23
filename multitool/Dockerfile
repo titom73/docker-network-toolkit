@@ -14,8 +14,7 @@ RUN     apk update \
                 perl-net-telnet postgresql-client procps rsync socat tcpdump \
                 tshark wget openssh libteam open-lldp tcptraceroute \
     && apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community/ --no-cache arp-scan \
-    && apk add hping3 --update-cache --repository
-http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+    && apk add hping3 --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     &&  mkdir /certs /docker \
     &&  chmod 700 /certs \
     &&  openssl req \
