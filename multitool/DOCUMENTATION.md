@@ -99,7 +99,7 @@ Sometimes you want to do testing using the **host network**.  This can be achiev
 
 ### Docker:
 ```
-$ docker run --network host -d titom73/network-multitool
+$ docker run --network host -d titom73/multitool
 ```
 
 **Note:** If port 80 and/or 443 are already busy on the host, then use pass the extra arguments to multitool, so it can listen on a different port, as shown below:
@@ -141,8 +141,6 @@ $ ip -d link show eth1.110
 
 $ ifconfig eth1.110 10.1.10.11 netmask 255.255.255.0
 ```
-
-
 
 ### Teaming
 

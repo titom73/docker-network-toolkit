@@ -22,7 +22,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: network-multitool
-        image: titom73/network-multitool
+        image: titom73/multitool
         env:
         - name: HTTP_PORT
           value: "1180"

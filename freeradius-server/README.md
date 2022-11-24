@@ -80,11 +80,3 @@ topology:
       binds:
         - radius_authorize:/etc/raddb/mods-config/files/authorize
 ```
-
-## Build Process
-
-Makefile with following options:
-
-- `build`:  Build image locally
-- `help`:  Display help message (*: main entry points / []: part of an entry point)
-- `push`:  Push image to remote registry
