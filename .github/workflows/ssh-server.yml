@@ -32,7 +32,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push image.
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: ssh-server/
           file: ssh-server/Dockerfile
