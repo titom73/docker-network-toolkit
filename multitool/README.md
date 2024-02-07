@@ -89,6 +89,12 @@ topology:
       mgmt_ipv4: 10.73.255.191
       env:
         TMODE: lacp
+      exec:
+        - sleep 10
+        - vconfig add team0 101
+        - ifconfig team0.101 10.10.101.32 netmask 255.255.255.0
+        - ip route del default
+        - ip route add default via 10.10.101.1
 ```
 
 Shell configuration
