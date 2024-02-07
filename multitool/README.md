@@ -6,6 +6,7 @@ __Initial image comes from [@hellt Multitool image](https://github.com/hellt/Net
 
 * apk package manager
 * ip, ifconfig, route, ethtool, mii-tool, route
+* [FRR framework](https://docs.frrouting.org/en/latest/setup.html) with configuration available under `/etc/frr/frr.conf`
 * tcpdump, tshark, traceroute, tracepath, mtr, tcptraceroute, nmap
 * ping, arp, arping, hping3, iperf3
 * Nginx Web Server (port `80`, port `443`)

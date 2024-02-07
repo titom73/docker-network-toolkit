@@ -1,4 +1,4 @@
-FROM alpine:3.13
+FROM alpine:3.16
 
 EXPOSE 80 443 1180 11443
 
@@ -13,7 +13,7 @@ RUN     apk update \
                 netcat-openbsd net-tools nginx  tmux screen nmap openssh-client openssl \
                 perl-net-telnet postgresql-client procps rsync socat tcpdump \
                 tshark wget openssh libteam open-lldp tcptraceroute \
-    && apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community/ --no-cache arp-scan \
+    && apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community/ --no-cache arp-scan frr \
     && apk add hping3 --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     &&  mkdir /certs /docker \
     &&  chmod 700 /certs \
