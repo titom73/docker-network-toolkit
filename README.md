@@ -29,7 +29,7 @@ docker run --rm \
 - A simple [Freeradius](freeradius-server) server:
 
 ```bash
-docker pull titom73/radius:latest
+docker pull titom73/freeradius:latest
 ```
 
 ## License
