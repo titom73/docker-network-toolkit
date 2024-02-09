@@ -44,19 +44,6 @@ Step 2/2 : COPY raddb/ /etc/raddb/
  ---> f67bd5b2e15a
 Successfully built f67bd5b2e15a
 Successfully tagged titom73/freeradius:0.3.0
-
-
-$ docker push titom73/freeradius:0.3.0
-The push refers to repository [docker.io/titom73/freeradius]
-11d8e95eba2c: Pushed
-a5d47849ff0e: Mounted from freeradius/freeradius-server
-923b92b7a7a8: Mounted from freeradius/freeradius-server
-0f580cf8f6a3: Mounted from freeradius/freeradius-server
-16542a8fc3be: Mounted from freeradius/freeradius-server
-6597da2e2e52: Mounted from freeradius/freeradius-server
-977183d4e999: Mounted from freeradius/freeradius-server
-c8be1b8f4d60: Mounted from freeradius/freeradius-server
-0.3.0: digest: sha256:09aed4d155b3737f214b74fb19473d1e75572f7546a585ddee3f02c616bac484 size: 1989
 ```
 
 ## Run commands
@@ -66,7 +53,7 @@ c8be1b8f4d60: Mounted from freeradius/freeradius-server
 ```shell
 $ docker run -d -t --name freeradius -p 1812:1812/udp -p 1813:1813/udp titom73/freeradius:latest
 
-$ docker logs freeradius
+$ docker logs freeradius --follow
 
 $ docker rm -f freeradius
 ```
@@ -76,6 +63,8 @@ $ docker rm -f freeradius
 ```shell
 $ radtest ansible cvpuser 172.17.0.2 0 testing123
 ```
+
+Or use [titom73/radtest](../freeradius-client/) container
 
 ### Containerlab integration
 
@@ -96,6 +85,8 @@ topology:
 ### freeradius Authorize example
 
 #### AAA Example
+
+Configured under [`raddb/mods-config/files/authorize`](raddb/mods-config/files/authorize)
 
 ```txt
 aradmin  Cleartext-Password := "aradmin"
