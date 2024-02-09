@@ -38,12 +38,12 @@ jobs:
           file: freeradius-client/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v7,linux/arm64,linux/ppc64le
           push: true
-          tags: ${{ secrets.DOCKER_IMAGE_FREERADIUS }}:latest
+          tags: ${{ secrets.DOCKER_IMAGE_RADTEST }}:latest
 
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ secrets.DOCKER_IMAGE_FREERADIUS }}
+          repository: ${{ secrets.DOCKER_IMAGE_RADTEST }}
           readme-filepath: freeradius-client/README.md
