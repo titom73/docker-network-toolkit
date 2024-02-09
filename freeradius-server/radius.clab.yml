@@ -1,0 +1,22 @@
+name: radius
+mgmt:
+  network: radius-testing
+  ipv4-subnet: 192.168.10.0/24
+
+topology:
+  nodes:
+    radtest:
+      image: titom73/radtest:${IMAGE_VERSION:=latest}
+      kind: linux
+      mgmt-ipv4: 192.168.10.3
+      entrypoint: ash
+
+    radius:
+      image: titom73/freeradius:${IMAGE_VERSION:=latest}
+      mgmt-ipv4: 192.168.10.2
+      kind: linux
+      publish:
+        - udp/1812
+        - udp/1813
+      binds:
+        - raddb/mods-config/files/authorize:/etc/raddb/mods-config/files/authorize
