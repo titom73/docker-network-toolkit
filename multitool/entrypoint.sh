@@ -175,7 +175,7 @@ if [ "$TMODE" == 'lacp' ] || [ "$TMODE" == 'static' ] || [ "$TMODE" == 'active-b
   UPLINK="team"
 fi
 
-
+/usr/sbin/sshd -D
 
 # Execute the command specified as CMD in Dockerfile:
 exec "$@"
