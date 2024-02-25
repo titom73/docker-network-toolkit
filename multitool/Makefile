@@ -1,5 +1,5 @@
 
-IMAGE_NAME ?= titom73/network-multitool
+IMAGE_NAME ?= titom73/multitool
 IMAGE_TAG ?= dev
 DOCKER_FILE ?= Dockerfile
 

@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: network-multitool
+  name: multitool
   labels:
     tier: node
-    app: network-multitool
+    app: multitool
 spec:
   selector:
     matchLabels:
       tier: node
-      app: network-multitool
+      app: multitool
   template:
     metadata:
       labels:
         tier: node
-        app: network-multitool
+        app: multitool
     spec:
       hostNetwork: true
       tolerations:
       - operator: Exists
         effect: NoSchedule
       containers:
-      - name: network-multitool
+      - name: multitool
         image: titom73/multitool
         env:
         - name: HTTP_PORT

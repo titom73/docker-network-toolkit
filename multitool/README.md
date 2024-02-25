@@ -1,6 +1,6 @@
-# Network-Multitool
+# multitool
 
-__Initial image comes from [@hellt Multitool image](https://github.com/hellt/Network-MultiTool)__
+__Initial image comes from [@hellt Multitool image](https://github.com/hellt/multitool)__
 
 ## Tools included in image:
 
@@ -82,7 +82,7 @@ topology:
     ceos:
       image: arista/ceos:4.27.1F
     linux:
-      image: titom73/network-multitool:extra
+      image: titom73/multitool:extra
   nodes:
     client11:
       kind: linux
@@ -113,13 +113,13 @@ Below is an example:
 ```bash
 # Start container with custom ports
 $ docker run -e HTTP_PORT=1180 -e HTTPS_PORT=11443 \
-    -p 1180:1180 -p 11443:11443 -d local/network-multitool
+    -p 1180:1180 -p 11443:11443 -d local/multitool
 4636efd4660c2436b3089ab1a979e5ce3ae23055f9ca5dc9ffbab508f28dfa2a
 
 # List running containers with exposed ports
 $ docker ps
 CONTAINER ID        IMAGE                     COMMAND                  CREATED             STATUS              PORTS                                                             NAMES
-4636efd4660c        local/network-multitool   "/docker-entrypoint.…"   4 seconds ago       Up 3 seconds        80/tcp, 0.0.0.0:1180->1180/tcp, 11443/tcp, 0.0.0.0:11443->11443/tcp   recursing_nobel
+4636efd4660c        local/multitool   "/docker-entrypoint.…"   4 seconds ago       Up 3 seconds        80/tcp, 0.0.0.0:1180->1180/tcp, 11443/tcp, 0.0.0.0:11443->11443/tcp   recursing_nobel
 6e8b6ed8bfa6        nginx                     "nginx -g 'daemon of…"   56 minutes ago      Up 56 minutes       80/tcp                                                            nginx
 
 # Test connectivity for HTTP traffic on custom port

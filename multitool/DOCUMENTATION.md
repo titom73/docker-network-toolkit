@@ -1,6 +1,6 @@
-# Network-Multitool
+# multitool
 
-__Initial image comes from [@hellt Multitool image](https://github.com/hellt/Network-MultiTool)__
+__Initial image comes from [@hellt Multitool image](https://github.com/hellt/multitool)__
 
 A (**multi-arch**) multitool for container/network testing and troubleshooting. The main docker image is based on Alpine Linux.
 
@@ -13,13 +13,12 @@ The container image contains lots of tools, as well as a `nginx` web server, whi
 * linux/arm64
 
 ## Variants / image tags:
-* **latest**, minimal ( The main/default **'minimal'** image - Alpine based )
-* extra
+* **latest**
 
 Remember, this *multitool* is purely a troubleshooting tool, and should be used as such. It is not designed to abuse openshift (or any system's) security, nor should it be used to do so.
 
 
-## Tools included in "latest, minimal":
+## Tools included in "latest":
 * apk package manager
 * Nginx Web Server (port `80`, port `443`) - with customizable ports!
 * awk, cut, diff, find, grep, sed, vi editor, wc
@@ -34,24 +33,19 @@ Remember, this *multitool* is purely a troubleshooting tool, and should be used 
 * telnet client
 * tcpdump
 * jq
-* bash
-
-**Size:** 16 MB compressed, 38 MB uncompressed
-
-## Tools included in "extra":
-All tools from "minimal", plus:
 * iperf3
 * ethtool, mii-tool, route
 * nmap
 * ss
 * tshark
 * ssh client, lftp client, rsync, scp
+* ssh server (user `root` / password `password123`)
 * netcat (nc), socat
 * ApacheBench (ab)
 * mysql & postgresql client
 * git
 
-**Size:** 64 MB compressed, 220 MB uncompressed
+**Size:** 64 MB compressed, 300 MB uncompressed
 
 
 **Note:** The SSL certificates are generated for "localhost", are self signed, and placed in `/certs/` directory. During your testing, ignore the certificate warning/error. While using curl, you can use `-k` to ignore SSL certificate warnings/errors.
@@ -63,7 +57,7 @@ All tools from "minimal", plus:
 
 ### Docker:
 ```
-$ docker run  -d titom73/network-multitool
+$ docker run  -d titom73/multitool
 ```
 
 Then:
@@ -77,12 +71,12 @@ $ docker exec -it container-name /bin/bash
 
 Create single pod - without a deployment:
 ```
-$ kubectl run multitool --image=titom73/network-multitool
+$ kubectl run multitool --image=titom73/multitool
 ```
 
 Create a deployment:
 ```
-$ kubectl create deployment multitool --image=titom73/network-multitool
+$ kubectl create deployment multitool --image=titom73/multitool
 ```
 
 Then:
@@ -106,7 +100,7 @@ $ docker run --network host -d titom73/multitool
 **Note:** If port 80 and/or 443 are already busy on the host, then use pass the extra arguments to multitool, so it can listen on a different port, as shown below:
 
 ```
-$ docker run --network host -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -d titom73/network-multitool
+$ docker run --network host -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -d titom73/multitool
 ```
 
 ### Kubernetes:
@@ -159,7 +153,7 @@ topology:
     ceos:
       image: arista/ceos:4.27.1F
     linux:
-      image: titom73/network-multitool:extra
+      image: titom73/multitool:extra
   nodes:
     client11:
       kind: linux
@@ -179,17 +173,17 @@ $ ip link set team0.110 up
 
 
 # Configurable HTTP and HTTPS ports:
-There are times when one may want to join this (multitool) container to another container's IP namespace for troubleshooting, or on the host network. This is true for both Docker and Kubernetes platforms. During that time if the container in question is a web server (nginx, apache, etc), or a reverse-proxy (traefik, nginx, haproxy, etc), then network-multitool cannot join it in the same IP namespace on Docker, and similarly it cannot join the same pod on Kubernetes. This happens because network multitool also runs a web server on port 80 (and 443), and this results in port conflict on the same IP address. To help in this sort of troubleshooting, there are two environment variables **HTTP_PORT** and **HTTPS_PORT** , which you can use to provide the values of your choice instead of 80 and 443. When the container starts, it uses the values provided by you/user to listen for incoming connections. Below is an example:
+There are times when one may want to join this (multitool) container to another container's IP namespace for troubleshooting, or on the host network. This is true for both Docker and Kubernetes platforms. During that time if the container in question is a web server (nginx, apache, etc), or a reverse-proxy (traefik, nginx, haproxy, etc), then multitool cannot join it in the same IP namespace on Docker, and similarly it cannot join the same pod on Kubernetes. This happens because network multitool also runs a web server on port 80 (and 443), and this results in port conflict on the same IP address. To help in this sort of troubleshooting, there are two environment variables **HTTP_PORT** and **HTTPS_PORT** , which you can use to provide the values of your choice instead of 80 and 443. When the container starts, it uses the values provided by you/user to listen for incoming connections. Below is an example:
 
 ```
 $ docker run -e HTTP_PORT=1180 -e HTTPS_PORT=11443 \
-    -p 1180:1180 -p 11443:11443 -d local/network-multitool
+    -p 1180:1180 -p 11443:11443 -d local/multitool
 4636efd4660c2436b3089ab1a979e5ce3ae23055f9ca5dc9ffbab508f28dfa2a
 
 
 $ docker ps
 CONTAINER ID        IMAGE                     COMMAND                  CREATED             STATUS              PORTS                                                             NAMES
-4636efd4660c        local/network-multitool   "/docker-entrypoint.…"   4 seconds ago       Up 3 seconds        80/tcp, 0.0.0.0:1180->1180/tcp, 443/tcp, 0.0.0.0:11443->11443/tcp   recursing_nobel
+4636efd4660c        local/multitool   "/docker-entrypoint.…"   4 seconds ago       Up 3 seconds        80/tcp, 0.0.0.0:1180->1180/tcp, 443/tcp, 0.0.0.0:11443->11443/tcp   recursing_nobel
 6e8b6ed8bfa6        nginx                     "nginx -g 'daemon of…"   56 minutes ago      Up 56 minutes       80/tcp                                                            nginx
 
 

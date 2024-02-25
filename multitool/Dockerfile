@@ -1,6 +1,6 @@
 FROM alpine:3.16
 
-EXPOSE 80 443 1180 11443
+EXPOSE 22 80 443 1180 11443
 
 # Arguement for Password
 ARG PASSWORD=password123
@@ -69,8 +69,8 @@ CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
 
 # Build and Push (to dockerhub) instructions:
 # -------------------------------------------
-# docker build -t local/network-multitool .
-# docker tag local/network-multitool titom73/multitool
+# docker build -t local/multitool .
+# docker tag local/multitool titom73/multitool
 # docker login
 # docker push titom73/multitool
 

@@ -2,7 +2,7 @@
 name: dev_multi_tools
 
 mgmt:
-  network: 'test-network-multitool'
+  network: 'test-multitool'
   ipv4_subnet: 192.168.1.0/24
 
 topology:
@@ -10,7 +10,7 @@ topology:
     ceos:
       image: arista/ceos:4.27.1F
     linux:
-      image: titom73/network-multitool:latest
+      image: titom73/multitool:latest
   nodes:
     ceos01:
       image: arista/ceos:4.27.1F
