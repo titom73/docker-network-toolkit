@@ -175,8 +175,15 @@ if [ "$TMODE" == 'lacp' ] || [ "$TMODE" == 'static' ] || [ "$TMODE" == 'active-b
   UPLINK="team"
 fi
 
+######################
+# Enabling SSH server
+######################
+
 /usr/sbin/sshd -D
+
+##########################
+# Continue to execute CMD
+##########################
 
 # Execute the command specified as CMD in Dockerfile:
 exec "$@"
-
