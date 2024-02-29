@@ -47,19 +47,6 @@ if [ -n "${HTTPS_PORT}" ]; then
   sed -i "s/443/${HTTPS_PORT}/g"  /etc/nginx/nginx.conf
 fi
 
-###############
-# Enabling LLDP
-###############
-
-lldpad -d
-for i in `ls /sys/class/net/ | grep 'eth\|ens\|eno'`
-do
-    lldptool set-lldp -i $i adminStatus=rxtx
-    lldptool -T -i $i -V sysName enableTx=yes
-    lldptool -T -i $i -V portDesc enableTx=yes
-    lldptool -T -i $i -V sysDesc enableTx=yes
-done
-
 #######################
 # TEAMING configuration
 #######################
@@ -180,6 +167,19 @@ fi
 ######################
 
 /usr/sbin/sshd -D
+
+###############
+# Enabling LLDP
+###############
+
+lldpad -d
+for i in `ls /sys/class/net/ | grep 'eth\|ens\|eno'`
+do
+    lldptool set-lldp -i $i adminStatus=rxtx
+    lldptool -T -i $i -V sysName enableTx=yes
+    lldptool -T -i $i -V portDesc enableTx=yes
+    lldptool -T -i $i -V sysDesc enableTx=yes
+done
 
 ##########################
 # Continue to execute CMD
