@@ -1,64 +1,89 @@
 # TACACS+ Docker Image
 
-This image is a built version of [tac_plus](http://www.pro-bono-publico.de/projects/),
-a TACACS+ implementation written by Marc Huber.
+Tacacs+ docker image for lab purpose
 
-Various configuration options and components were taken from an existing docker image repos which can be found here:
-
-- https://github.com/lfkeitel/docker-tacacs-plus
-- https://github.com/dchidell/docker-tacacs
-
+> [!NOTE]
+> This image is not yet built in the repository, please built it manually
 
 ## Usage
 
-By default all logs (including detailed information on authorization and authentication) are sent to stdout, meaning they're available to view via `docker logs` once the container is operational. This log contains all AAA information.
+TBD
 
-A log file is also generated with less verbosity (i.e. no debug information). This can be found at `/var/log/tac_plus.log` within the container. This can either be exported via a docker volume or read directly to console by cat or tailing the file via docker exec. E.g. `docker exec <containerid / name>  tail -f /var/log/tac_plus.log`
+## Pre-configured users
 
-TACACS+ uses port 49. This is exposed by the container, but will require forwarding to the host if the default bridged networking is used using `-p 49:49`
+- `admin` with no password - member of `superuser`
+- `cvpadmin` with no password - member of `superuser`
+- `testuser1` member of `restricted-priv-lvl-15`
+- `testuser2` member of `restricted-priv-lvl-1`
 
-## Configuration
+## Debugging values for lab
 
-The `tac_user.cfg` file should be modified and passed into the container via a docker volume using `-v /path/to/tac_user.cfg:/etc/tac_plus/tac_user.cfg`
+Values that can be used in `CMD` with `-d` option:
 
-If base configuration changes are required, the `tac_base.cfg` file can be altered and included as a docker volume following the above syntax.
+```bash
+docker run <options> git.as73.inetsix.net/docker/tacacs -d 8 -d 16
+```
 
-Various configuration defaults exist (defined in `tac_user.cfg`)
-
-- __TACACS Key:__ `ciscotacacskey`
-- __Priv 15 User (IOS):__ `iosadmin` _password:_ `cisco`
-- __Priv 0 User (IOS):__ `iosuser` _password:_ `cisco`
-- __Network Admin (NXOS):__ `nxosadmin` _password:_ `cisco`
-- __Network User (NXOS):__ `nxosuser` _password:_ `cisco`
-- __Read-write User (ACI):__ `aciadmin` _password:_ `cisco`
-- __Read-only User (ACI):__ `aciro` _password:_ `cisco`
-- __Show User:__ `showuser` _password:_ `cisco`
+- `2`:       configuration parsing debugging
+- `4`:       fork(1) debugging
+- `8`:       authorization debugging
+- `16`:      authentication debugging
+- `32`:      password file processing debugging
+- `64`:      accounting debugging
+- `128`:     config file parsing & lookup
+- `256`:     packet transmission/reception
+- `512`:     encryption/decryption
+- `1024`:    MD5 hash algorithm debugging
+- `2048`:    very low level encryption/decryption
+- `32768`:   max session debugging
+- `65536`:   lock debugging
 
 ## Examples
 
-Example - Running the default container for a quick test and inspecting the logs:
+### Example - Deamonise the container and live-view basic logs after a while:
 
 ```bash
-docker run -it --rm -p 49:49 titom73/tacacs
-```
+# Run container
+docker run -itd --name=tacacs -v /path/to/my/config/tac_user.cfg:/etc/tac_plus/tac_user.cfg:ro -p 49:49 git.as73.inetsix.net/docker/tacacs
 
-Example - Deamonise the container and live-view basic logs after a while:
-
-```bash
-docker run -itd --name=tacacs -p 49:49 titom73/tacacs
+# Show TACACs logs
 docker exec tacacs tail -f /var/log/tac_plus.log
+
+# Show accounting logs
+docker exec tacacs tail -f /var/log/tac_plus.acct
 ```
 
-Example - Deamonise the container and live-view all logs after a while:
+### Example with docker-compose
 
-```bash
-docker run -itd --name=tacacs -p 49:49 titom73/tacacs
-docker logs -f tacacs
-```
-
-Example - Daemonise the container with a modified config file and live-view all logs after a while:
-
-```bash
-docker run -itd --name=tacacs -v /path/to/my/config/tac_user.cfg:/etc/tac_plus/tac_user.cfg:ro -p 49:49 titom73/tacacs
-docker logs -f tacacs
+```yaml
+services:
+  tacacs:
+    build: tacacs
+    container_name: lab-tacacs
+    restart: unless-stopped
+    command:
+      - '-d'
+      - '8'
+      - '-d'
+      - '16'
+      # Value   Meaning
+      # 2       configuration parsing debugging
+      # 4       fork(1) debugging
+      # 8       authorization debugging
+      # 16      authentication debugging
+      # 32      password file processing debugging
+      # 64      accounting debugging
+      # 128     config file parsing & lookup
+      # 256     packet transmission/reception
+      # 512     encryption/decryption
+      # 1024    MD5 hash algorithm debugging
+      # 2048    very low level encryption/decryption
+      # 32768   max session debugging
+      # 65536   lock debugging
+    volumes:
+      - ./tacacs/tac_plus.cfg:/etc/tac_plus/tac_plus.cfg:ro
+    ports:
+      - 49:49
+    networks:
+      - clab
 ```
