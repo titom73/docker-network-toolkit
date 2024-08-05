@@ -112,7 +112,7 @@ Based on [FreeRadius documentation](https://wiki.freeradius.org/guide/Mac-Auth)
 - List of authorized MAC addresses: [`/etc/raddb/authorized_macs`](raddb/authorized_macs)
 - MAC Address authorization configuration: [`/etc/raddb/mods-config/files/authorize`](raddb/mods-config/files/authorize)
 - MAC Address authorization processor: [`/etc/raddb/mods-enabled/authorized_macs`](raddb/mods-config/files/authorized_macs)
-- Default site configuration: [`/etc/raddb/sites-available/default`](raddb/sites-available/default)
+- Default site configuration: [`/etc/raddb/sites-available/default`](raddb/sites-available/default#L286-L306)
 
 __Usage in a containerlab topology__
 
