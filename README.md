@@ -21,6 +21,12 @@ docker exec -it 86 bash
 docker pull git.as73.inetsix.net/docker/freeradius:latest
 ```
 
+- A [TACACS+](./tacacs-server/) docker image:
+
+```bash
+docker run -itd --network tacacs-testing --name=tacacs -p 49:49 git.as73.inetsix.net/docker/tacacs_plus:alpine
+```
+
 - A simple [SSH Jumphost](ssh-server) to use with mysocket.io & containerlabs:
 
 ```bash

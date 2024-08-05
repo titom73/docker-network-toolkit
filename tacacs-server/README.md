@@ -31,7 +31,7 @@ make all
 To run with the default configuration:
 
 ```bash
-ddocker run -itd --network tacacs-testing --name=tacacs -p 49:49 git.as73.inetsix.net/docker/tacacs_plus:alpine
+docker run -itd --network tacacs-testing --name=tacacs -p 49:49 git.as73.inetsix.net/docker/tacacs_plus:alpine
 ```
 
 > [!WARNING]
