@@ -1,64 +1,76 @@
 # TACACS+ Docker Image
 
-This image is a built version of [tac_plus](http://www.pro-bono-publico.de/projects/),
-a TACACS+ implementation written by Marc Huber.
+This image is a built version of
+[tac_plus](http://www.pro-bono-publico.de/projects/), a TACACS+ implementation
+written by Marc Huber.
 
-Various configuration options and components were taken from an existing docker image repos which can be found here:
+## Tags
 
-- https://github.com/lfkeitel/docker-tacacs-plus
-- https://github.com/dchidell/docker-tacacs
+`latest`, `ubuntu`, `ubuntu-<build-date>` - Latest version based on Ubuntu
+18.04.
 
+`alpine`, `alpine-<build-date>` - Latest version based on Alpine 3.9.
 
-## Usage
+## Building
 
-By default all logs (including detailed information on authorization and authentication) are sent to stdout, meaning they're available to view via `docker logs` once the container is operational. This log contains all AAA information.
+Docker engine 17.06+ is required to build this image because it uses a multi-stage build. To build run: `make`. Add the argument `alpine` or `ubuntu` to build a specific image.
 
-A log file is also generated with less verbosity (i.e. no debug information). This can be found at `/var/log/tac_plus.log` within the container. This can either be exported via a docker volume or read directly to console by cat or tailing the file via docker exec. E.g. `docker exec <containerid / name>  tail -f /var/log/tac_plus.log`
+```bash
+# Build Ubuntu version
+make ubuntu
 
-TACACS+ uses port 49. This is exposed by the container, but will require forwarding to the host if the default bridged networking is used using `-p 49:49`
+# Build Alpine
+make alpine
+
+# Build Alpine, Ubuntu and TAG images
+make all
+```
+
+## Using
+
+To run with the default configuration:
+
+```bash
+ddocker run -itd --network tacacs-testing --name=tacacs -p 49:49 git.as73.inetsix.net/docker/tacacs_plus:alpine
+```
+
+> [!WARNING]
+> The default configuration has a user with the username:password of `eosadmin:eosadmin` and the enable password is set to enable. Obviously, don't use this configuration in production.
+
+Available users:
+
+- username: `eosadmin` member of `eos-priv-15`
+- username: `eosuser` member of `eos-priv-1`
+- username: `showuser` member of `show-user`
+
+All passwords are set to `arista`
+
+The configuration is located at [`/etc/tac_plus/tac_plus.cfg`](./tac_plus.sample.cfg). If you wish to use a custom configuration, simply overwrite it in a derived image or use a volume mount.
+
+```bash
+docker run -itd --network tacacs-testing --name=tacacs \
+    -v ${PWD}/tac_user.cfg:/etc/tac_plus/tac_plus.cfg\
+    -p 49:49 git.as73.inetsix.net/docker/tacacs_plus:alpine
+```
+
+By default logs go to stdout.
+
+Port 49 is exposed as the server port.
+
+## EOS Configuration
+
+Basic setup to apply:
+
+```EOS
+tacacs-server host <TACACS_PLUS_IP> vrf default key 0 arista
+tacacs-server policy unknown-mandatory-attribute ignore
+aaa authentication login default group tacacs+ local
+aaa authentication enable default group tacacs+ local
+aaa authorization exec default group tacacs+ local
+aaa authorization commands all default group tacacs+ local
+aaa accounting commands all default start-stop group tacacs+
+```
 
 ## Configuration
 
-The `tac_user.cfg` file should be modified and passed into the container via a docker volume using `-v /path/to/tac_user.cfg:/etc/tac_plus/tac_user.cfg`
-
-If base configuration changes are required, the `tac_base.cfg` file can be altered and included as a docker volume following the above syntax.
-
-Various configuration defaults exist (defined in `tac_user.cfg`)
-
-- __TACACS Key:__ `ciscotacacskey`
-- __Priv 15 User (IOS):__ `iosadmin` _password:_ `cisco`
-- __Priv 0 User (IOS):__ `iosuser` _password:_ `cisco`
-- __Network Admin (NXOS):__ `nxosadmin` _password:_ `cisco`
-- __Network User (NXOS):__ `nxosuser` _password:_ `cisco`
-- __Read-write User (ACI):__ `aciadmin` _password:_ `cisco`
-- __Read-only User (ACI):__ `aciro` _password:_ `cisco`
-- __Show User:__ `showuser` _password:_ `cisco`
-
-## Examples
-
-Example - Running the default container for a quick test and inspecting the logs:
-
-```bash
-docker run -it --rm -p 49:49 titom73/tacacs
-```
-
-Example - Deamonise the container and live-view basic logs after a while:
-
-```bash
-docker run -itd --name=tacacs -p 49:49 titom73/tacacs
-docker exec tacacs tail -f /var/log/tac_plus.log
-```
-
-Example - Deamonise the container and live-view all logs after a while:
-
-```bash
-docker run -itd --name=tacacs -p 49:49 titom73/tacacs
-docker logs -f tacacs
-```
-
-Example - Daemonise the container with a modified config file and live-view all logs after a while:
-
-```bash
-docker run -itd --name=tacacs -v /path/to/my/config/tac_user.cfg:/etc/tac_plus/tac_user.cfg:ro -p 49:49 titom73/tacacs
-docker logs -f tacacs
-```
+Configuration documentation can be found [here](http://www.pro-bono-publico.de/projects/unpacked/doc/tac_plus.pdf).
