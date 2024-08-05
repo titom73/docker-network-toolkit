@@ -1,7 +1,7 @@
 # FreeRadius Docker image
 
 - Generated from: [freeradius/freeradius-server](https://hub.docker.com/r/freeradius/freeradius-server/)
-- [Docker Hub repository](https://hub.docker.com/repository/docker/git.as73.inetsix.net/docker/freeradius/general)
+- [Local repository](https://git.as73.inetsix.net/docker/-/packages/container/freeradius/latest)
 
 Arista Radius directory:
 
