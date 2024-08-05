@@ -71,7 +71,7 @@ topology:
 
 Configured under [`raddb/mods-config/files/authorize`](raddb/mods-config/files/authorize)
 
-> [!INFO]
+> [!NOTE]
 > This file is already part of the image build. It is recommended to mount your own authentication file.
 
 __Usage in a containerlab topology__
@@ -106,7 +106,7 @@ aradmin  Cleartext-Password := "aradmin"
 
 Based on [FreeRadius documentation](https://wiki.freeradius.org/guide/Mac-Auth)
 
-> [!INFO]
+> [!IMPORTANT]
 > This configuration breaks the AAA configuration.
 
 - List of authorized MAC addresses: [`/etc/raddb/authorized_macs`](raddb/authorized_macs)
