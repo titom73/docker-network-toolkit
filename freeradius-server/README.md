@@ -1,7 +1,7 @@
 # FreeRadius Docker image
 
 - Generated from: [freeradius/freeradius-server](https://hub.docker.com/r/freeradius/freeradius-server/)
-- [Docker Hub repository](https://hub.docker.com/repository/docker/titom73/freeradius/general)
+- [Docker Hub repository](https://hub.docker.com/repository/docker/git.as73.inetsix.net/docker/freeradius/general)
 
 Arista Radius directory:
 
@@ -23,35 +23,17 @@ VALUE    Arista-WebAuth            complete         2
 
 Container runs freeradius in debug mode (`-X`) to print out requests and responses in `docker logs`
 
-## Build Commands
+## Available tags
 
-```shell
-$ docker build -t titom73/freeradius:latest .
-Sending build context to Docker daemon  5.632kB
-Step 1/2 : FROM freeradius/freeradius-server:latest
-latest: Pulling from freeradius/freeradius-server
-5bed26d33875: Pull complete
-f11b29a9c730: Pull complete
-930bda195c84: Pull complete
-78bf9a5ad49e: Pull complete
-2de2cd3fd5d1: Pull complete
-d5350feee5dd: Pull complete
-59cc082ab365: Pull complete
-Digest: sha256:21c8bfa904d866c0f206210d941553498973bc80800a65e68a348aca4727cd1d
-Status: Downloaded newer image for freeradius/freeradius-server:latest
- ---> 4b030320a0c3
-Step 2/2 : COPY raddb/ /etc/raddb/
- ---> f67bd5b2e15a
-Successfully built f67bd5b2e15a
-Successfully tagged titom73/freeradius:0.3.0
-```
+- `latest`: Run with latest version of Freeradius
+- `3.2.5`: Run with Freeradius `3.2.5`
 
 ## Run commands
 
 ### Manage container
 
 ```shell
-$ docker run -d -t --name freeradius -p 1812:1812/udp -p 1813:1813/udp titom73/freeradius:latest
+$ docker run -d -t --name freeradius -p 1812:1812/udp -p 1813:1813/udp git.as73.inetsix.net/docker/freeradius:latest
 
 $ docker logs freeradius --follow
 
@@ -61,10 +43,10 @@ $ docker rm -f freeradius
 ### Test container
 
 ```shell
-$ radtest ansible cvpuser 172.17.0.2 0 testing123
+$ radtest cvpuser cvpuser 192.168.10.2 0 testing123
 ```
 
-Or use [titom73/radtest](../freeradius-client/) container
+Or use [`git.as73.inetsix.net/docker/radtest:latest`](../freeradius-client/) container
 
 ### Containerlab integration
 
@@ -72,21 +54,45 @@ Or use [titom73/radtest](../freeradius-client/) container
 topology:
   nodes:
     radius:
-      image: titom73/freeradius:latest
+      image: git.as73.inetsix.net/docker/freeradius:latest
       mgmt_ipv4: 172.16.0.2
       kind: linux
       binds:
         - radius_authorize:/etc/raddb/mods-config/files/authorize
+
 # ...
   links:
     - endpoints: ["leaf1:eth2", "radius:eth1"]
 ```
 
-### freeradius Authorize example
+### freeradius usage examples
 
 #### AAA Example
 
 Configured under [`raddb/mods-config/files/authorize`](raddb/mods-config/files/authorize)
+
+> [!INFO]
+> This file is already part of the image build. It is recommended to mount your own authentication file.
+
+__Usage in a containerlab topology__
+
+```yaml
+topology:
+  nodes:
+    radius:
+      image: git.as73.inetsix.net/docker/freeradius:latest
+      mgmt_ipv4: 172.16.0.2
+      kind: linux
+      binds:
+        - raddb/clients.conf:/etc/raddb/clients.conf
+        - radius_authorize:/etc/raddb/mods-config/files/authorize
+
+# ...
+  links:
+    - endpoints: ["leaf1:eth2", "radius:eth1"]
+```
+
+__Username definition example__
 
 ```txt
 aradmin  Cleartext-Password := "aradmin"
@@ -94,4 +100,48 @@ aradmin  Cleartext-Password := "aradmin"
          Service-Type := NAS-Prompt-User,
          Arista-AVpair = "shell:priv-lvl=15",
          Arista-AVpair = "shell:cvp-roles=network-admin"
+```
+
+#### MAC Based Authorization
+
+Based on [FreeRadius documentation](https://wiki.freeradius.org/guide/Mac-Auth)
+
+> [!INFO]
+> This configuration breaks the AAA configuration.
+
+- List of authorized MAC addresses: [`/etc/raddb/authorized_macs`](raddb/authorized_macs)
+- MAC Address authorization configuration: [`/etc/raddb/mods-config/files/authorize`](raddb/mods-config/files/authorize)
+- MAC Address authorization processor: [`/etc/raddb/mods-enabled/authorized_macs`](raddb/mods-config/files/authorized_macs)
+- Default site configuration: [`/etc/raddb/sites-available/default`](raddb/sites-available/default)
+
+__Usage in a containerlab topology__
+
+```yaml
+topology:
+  nodes:
+    radius:
+      image: git.as73.inetsix.net/docker/freeradius:latest
+      mgmt_ipv4: 172.16.0.2
+      kind: linux
+      binds:
+        - raddb/clients.conf:/etc/raddb/clients.conf
+        - raddb/authorized_macs:/etc/raddb/authorized_macs
+        - raddb/mods-config/files/authorize:/etc/raddb/mods-config/files/authorize
+        - raddb/mods-config/files/authorized_macs:/etc/raddb/mods-enabled/authorized_macs
+        - raddb/sites-available/default:/etc/raddb/sites-available/default
+
+# ...
+  links:
+    - endpoints: ["leaf1:eth2", "radius:eth1"]
+```
+
+__Radtest example to send `Calling-Station-Id`__
+
+```bash
+cat << EOF | radclient -x 192.168.10.2 auth testing123
+  User-Name = 6894244B56EB
+  User-Password = 6894244B56EB
+  NAS-Port = 0
+  Calling-Station-Id = 00-11-22-33-44-55
+EOF
 ```

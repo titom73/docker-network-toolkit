@@ -1,6 +1,6 @@
 
-IMAGE_NAME ?= titom73/freeradius
-IMAGE_TAG ?= dev
+IMAGE_NAME ?= git.as73.inetsix.net/docker/freeradius
+IMAGE_TAG ?= latest
 
 .PHONY: build
 build:  ## Build image locally

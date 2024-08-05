@@ -6,17 +6,31 @@ mgmt:
 topology:
   nodes:
     radtest:
-      image: titom73/radtest:${IMAGE_VERSION:=latest}
+      image: git.as73.inetsix.net/docker/radtest:${IMAGE_VERSION:=latest}
       kind: linux
       mgmt-ipv4: 192.168.10.3
       entrypoint: ash
 
+    debian:
+      image: debian:12.5
+      kind: linux
+      mgmt-ipv4: 192.168.10.4
+      entrypoint: bash
+
     radius:
-      image: titom73/freeradius:${IMAGE_VERSION:=latest}
+      image: git.as73.inetsix.net/docker/freeradius:${IMAGE_VERSION:=latest}
       mgmt-ipv4: 192.168.10.2
       kind: linux
       publish:
         - udp/1812
         - udp/1813
       binds:
-        - raddb/mods-config/files/authorize:/etc/raddb/mods-config/files/authorize
+        - raddb/clients.conf:/etc/raddb/clients.conf
+        # -------------------------------------------
+        # Mounts for MAC Address Authorization
+        # -------------------------------------------
+        #- raddb/authorized_macs:/etc/raddb/authorized_macs
+        #- raddb/mods-config/files/authorize:/etc/raddb/mods-config/files/authorize
+        #- raddb/mods-config/files/authorized_macs:/etc/raddb/mods-enabled/authorized_macs
+        #- raddb/sites-available/default:/etc/raddb/sites-available/default
+

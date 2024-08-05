@@ -1,6 +1,6 @@
 
-IMAGE_NAME ?= titom73/radtest
-IMAGE_TAG ?= dev
+IMAGE_NAME ?= git.as73.inetsix.net/docker/radtest
+IMAGE_TAG ?= latest
 
 .PHONY: build
 build:  ## Build image locally
