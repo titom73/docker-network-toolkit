@@ -12,7 +12,7 @@ RUN     apk update \
                 iperf3 iproute2 iputils jq lftp mtr mysql-client \
                 netcat-openbsd net-tools nginx  tmux screen nmap openssh-client openssl \
                 perl-net-telnet postgresql-client procps rsync socat tcpdump \
-                tshark wget openssh libteam open-lldp tcptraceroute \
+                tshark wget openssh libteam open-lldp tcptraceroute zsh \
     && apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community/ --no-cache arp-scan frr \
     && apk add hping3 --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     &&  mkdir /certs /docker \
@@ -20,6 +20,9 @@ RUN     apk update \
     &&  openssl req \
         -x509 -newkey rsa:2048 -nodes -days 3650 \
         -keyout /certs/server.key -out /certs/server.crt -subj '/CN=localhost'
+
+# Installing zsh configuration
+ADD .bashrc /root/
 
 # Installing the openssh and bash package, removing the apk cache
 RUN sed -i s/#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config \
