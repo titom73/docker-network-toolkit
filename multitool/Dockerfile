@@ -1,9 +1,14 @@
-FROM alpine:3.16
+# check=skip=SecretsUsedInArgOrEnv
+
+ARG IMAGE_BASE=alpine
+ARG IMAGE_TAG=3.16
+
+FROM ${IMAGE_BASE}:${IMAGE_TAG}
 
 EXPOSE 22 80 443 1180 11443
 
-# Arguement for Password
-ARG PASSWORD=password123
+# Argument for Password (should be provided at build time with --build-arg)
+ARG PASSWORD
 
 # Install some tools in the container and generate self-signed SSL certificates.
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
@@ -12,7 +17,7 @@ RUN     apk update \
                 iperf3 iproute2 iputils jq lftp mtr mysql-client \
                 netcat-openbsd net-tools nginx  tmux screen nmap openssh-client openssl \
                 perl-net-telnet postgresql-client procps rsync socat tcpdump \
-                tshark wget openssh libteam open-lldp tcptraceroute zsh \
+                tshark wget openssh libteam open-lldp tcptraceroute freeradius-utils wpa_supplicant lldpd zsh\
     && apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community/ --no-cache arp-scan frr \
     && apk add hping3 --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     &&  mkdir /certs /docker \
@@ -26,14 +31,14 @@ ADD .bashrc /root/
 
 # Installing the openssh and bash package, removing the apk cache
 RUN sed -i s/#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config \
-  && echo "root:${PASSWORD}" | chpasswd \
+  && echo "root:${PASSWORD:-password123}" | chpasswd \
   && rm -rf /var/cache/apk/*
 
 # Defining the Port 22 for service
 RUN sed -ie 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
 RUN /usr/bin/ssh-keygen -A
 RUN ssh-keygen -t rsa -b 4096 -f  /etc/ssh/ssh_host_key
-ENV NOTVISIBLE "in users profile"
+ENV NOTVISIBLE="in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Configure CA for SSH
@@ -73,27 +78,27 @@ CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
 # Build and Push (to dockerhub) instructions:
 # -------------------------------------------
 # docker build -t local/multitool .
-# docker tag local/multitool titom73/multitool
+# docker tag local/multitool git.as73.inetsix.net/docker/multitool
 # docker login
-# docker push titom73/multitool
+# docker push git.as73.inetsix.net/docker/multitool
 
 
 # Pull (from dockerhub):
 # ----------------------
-# docker pull titom73/multitool
+# docker pull git.as73.inetsix.net/docker/multitool
 
 
 # Usage - on Docker:
 # ------------------
-# docker run --rm -it titom73/multitool /bin/bash
+# docker run --rm -it git.as73.inetsix.net/docker/multitool /bin/bash
 # OR
-# docker run -d  titom73/multitool
+# docker run -d  git.as73.inetsix.net/docker/multitool
 # OR
-# docker run -p 80:80 -p 443:443 -d  titom73/multitool
+# docker run -p 80:80 -p 443:443 -d  git.as73.inetsix.net/docker/multitool
 # OR
-# docker run -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -p 1180:1180 -p 11443:11443 -d  titom73/multitool
+# docker run -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -p 1180:1180 -p 11443:11443 -d  git.as73.inetsix.net/docker/multitool
 
 
 # Usage - on Kubernetes:
 # ---------------------
-# kubectl run multitool --image=titom73/multitool
+# kubectl run multitool --image=git.as73.inetsix.net/docker/multitool

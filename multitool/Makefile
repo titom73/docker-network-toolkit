@@ -1,5 +1,5 @@
 
-IMAGE_NAME ?= titom73/multitool
+IMAGE_NAME ?= git.as73.inetsix.net/docker/multitool
 IMAGE_TAG ?= dev
 DOCKER_FILE ?= Dockerfile
 
