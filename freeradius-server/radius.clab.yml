@@ -25,12 +25,8 @@ topology:
         - udp/1812
         - udp/1813
       binds:
-        - raddb/clients.conf:/etc/raddb/clients.conf
-        # -------------------------------------------
-        # Mounts for MAC Address Authorization
-        # -------------------------------------------
-        #- raddb/authorized_macs:/etc/raddb/authorized_macs
-        #- raddb/mods-config/files/authorize:/etc/raddb/mods-config/files/authorize
-        #- raddb/mods-config/files/authorized_macs:/etc/raddb/mods-enabled/authorized_macs
-        #- raddb/sites-available/default:/etc/raddb/sites-available/default
+        - raddb/mods-config/files/authorize:/etc/raddb/mods-config/files/authorize:ro
+        # - dictionaries/dictionary.arista:/usr/share/freeradius/dictionary.arista:ro
+        - coa_tests/coa_portflap.txt:/coa_tests/coa_portflap.txt:ro
+        - coa_tests/coa_portshutdown.txt:/coa_tests/coa_portshutdown.txt:ro
 

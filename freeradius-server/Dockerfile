@@ -1,7 +1,8 @@
 ARG IMAGE_BASE=freeradius/freeradius-server
-ARG IMAGE_TAG=3.2.5-alpine
+ARG IMAGE_TAG=latest-alpine
+ARG BUILDPLATFORM=linux/amd64
 
-FROM ${IMAGE_BASE}:${IMAGE_TAG}
+FROM --platform=$BUILDPLATFORM ${IMAGE_BASE}:${IMAGE_TAG}
 
 LABEL   "org.opencontainers.image.title"="Freeradius" \
         "org.opencontainers.artifact.description"="A simple Freeradius docker image." \
@@ -16,9 +17,15 @@ LABEL   "org.opencontainers.image.title"="Freeradius" \
         "org.opencontainers.image.revision"="dev" \
         "org.opencontainers.image.version"="latest"
 
+RUN apk add freeradius-utils
+
 COPY raddb/ /etc/raddb/
-COPY dictionaries/dictionary.arista /usr/share/freeradius/
-RUN echo "$INCLUDE dictionary.arista" >> /usr/share/freeradius/dictionary
+
+# COPY dictionaries/dictionary.arista /usr/share/freeradius/dictionary.arista
+# RUN echo "\$INCLUDE dictionary.arista" >> /usr/share/freeradius/dictionary
+
+COPY dictionaries/dictionary.arista /opt/share/freeradius/dictionary.arista
+RUN echo "\$INCLUDE dictionary.arista" >> /opt/share/freeradius/dictionary
 
 EXPOSE 1812 1813
 

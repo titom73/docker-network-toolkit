@@ -283,28 +283,6 @@ listen {
 #  Make *sure* that 'preprocess' comes before any realm if you
 #  need to setup hints for the remote radius server
 
-authorize {
-        preprocess
-
-        # If cleaning up the Calling-Station-Id...
-        rewrite_calling_station_id
-
-        # Now check against the authorized_macs file
-        authorized_macs
-
-        if (!ok) {
-                # No match was found, so reject
-                reject
-        }
-        else {
-                # The MAC address was found, so update Auth-Type
-                # to accept this auth.
-                update control {
-                        Auth-Type := Accept
-                }
-        }
-}
-
 
 authorize {
 	#

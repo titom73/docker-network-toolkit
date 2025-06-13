@@ -1,0 +1,3 @@
+User-Name = fc:bd:67:0f:1c:d1
+NAS-IP-Address=192.168.1.10
+Arista-PortFlap=1

@@ -1,22 +1,60 @@
 ##############################################################################
 #                                 Arista VSAs                                #
 ##############################################################################
+# -- text --
+#
+# dictionary.arista
+#
+# Version:     $Id$
+#
 
-VENDOR         Arista                          30065
-BEGIN-VENDOR   Arista
+VENDOR        Arista                30065
 
-ATTRIBUTE    Arista-AVPair                       1     string
-ATTRIBUTE    Arista-User-Priv-Level              2     integer
-ATTRIBUTE    Arista-User-Role                    3     string
-ATTRIBUTE    Arista-CVP-Role                     4     string
-ATTRIBUTE    Arista-Command                      5     string
-ATTRIBUTE    Arista-WebAuth                      6     integer
-ATTRIBUTE    Arista-BlockMac                     7     string
-ATTRIBUTE    Arista-UnblockMac                   8     string
-ATTRIBUTE    Arista-PortFlap                     9     integer
-ATTRIBUTE    Arista-Captive-Portal               10    string
+#
+#    Arista specific attributes
+#
+BEGIN-VENDOR    Arista
 
-VALUE    Arista-WebAuth            start            1
-VALUE    Arista-WebAuth            complete         2
+ATTRIBUTE    Arista-AVPair               1    string
+ATTRIBUTE       Arista-User-Priv-Level          2       integer
+ATTRIBUTE       Arista-User-Role                3       string
+ATTRIBUTE       Arista-CVP-Role                 4       string
+ATTRIBUTE       Arista-Command                  5       string
+ATTRIBUTE       Arista-WebAuth                  6       integer
+# Arista-BlockMac: {"List of MAC addresses to be blocked"}
+ATTRIBUTE       Arista-BlockMac                 7       string
+# Arista-UnblockMac: {"List of MAC addresses to be unblocked"}
+ATTRIBUTE       Arista-UnblockMac               8       string
+ATTRIBUTE       Arista-PortFlap                 9       integer
+ATTRIBUTE       Arista-Captive-Portal           10      string
+ATTRIBUTE       Arista-Segment-Id               11      string
+# Used internally by radsecproxy to send IP address of external radius server which
+# originated the CoA/DM request in string format
+ATTRIBUTE       Arista-Origin-Identifier        12      string
+ATTRIBUTE       Arista-PeriodicIdentity         13      integer
+ATTRIBUTE       Arista-Dynamic-HostMode         14      integer
+ATTRIBUTE       Arista-DeviceType               15      integer
+ATTRIBUTE       Arista-Action                   16      integer
+ATTRIBUTE       Arista-Device-Profiling         17      string
+ATTRIBUTE       Arista-Port-Shutdown            18      integer
+ATTRIBUTE       Arista-Mvrp                     19      integer
+ATTRIBUTE       Arista-Tenant-Id                20      integer
+ATTRIBUTE       Arista-Interface-Profile        21      string
 
-END-VENDOR   Arista
+VALUE           Arista-WebAuth          start           1
+VALUE           Arista-WebAuth          complete        2
+
+VALUE           Arista-PeriodicIdentity        stop    0
+VALUE           Arista-PeriodicIdentity        start   1
+
+VALUE           Arista-Dynamic-HostMode        disabled     0
+VALUE           Arista-Dynamic-HostMode        multi-host   1
+
+VALUE           Arista-DeviceType        none       0
+VALUE           Arista-DeviceType        phone      1
+
+VALUE           Arista-Action            reauthenticate      1
+
+VALUE           Arista-Mvrp        disable       0
+VALUE           Arista-Mvrp        enable        1
+END-VENDOR      Arista

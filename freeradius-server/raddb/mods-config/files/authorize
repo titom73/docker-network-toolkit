@@ -1,6 +1,7 @@
 cvpadmin Cleartext-Password := "cvpadmin"
         Arista-AVPair = "shell:priv-lvl=15",
-        Service-Type = NAS-Prompt-User
+        Service-Type = NAS-Prompt-User,
+        Tunnel-Private-Group-Id=100
 
 cvpuser Cleartext-Password := "cvpuser"
         Arista-AVPair = "shell:priv-lvl=15",
@@ -15,3 +16,11 @@ aradmin  Cleartext-Password := "aradmin"
         Service-Type := NAS-Prompt-User,
         Arista-AVpair = "shell:priv-lvl=15",
         Arista-AVpair = "shell:cvp-roles=network-admin"
+
+"fc:bd:67:0f:1c:d1" Cleartext-Password := "fc:bd:67:0f:1c:d1"
+        Tunnel-Private-Group-Id=100
+
+"fc:bd:67:0f:1c:d2" Cleartext-Password := "fc:bd:67:0f:1c:d2"
+        # Arista-Interface-Profile = "dot1x_access_points",
+        Auth-Type := Accept,
+        Tunnel-Private-Group-Id=228
