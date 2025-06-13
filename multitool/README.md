@@ -16,32 +16,33 @@ __Initial image comes from [@hellt Multitool image](https://github.com/hellt/mul
 * ps, netstat, gzip, cpio, tar
 * jq, bash, git
 
-## Supported platforms:
+## Supported platforms
 
-* linux/386
 * linux/amd64
-* linux/arm/v7
 * linux/arm64
-* linux/ppc64le
+
+```bash
+make buildx
+```
 
 ## Username & password for ssh
+
 Username and password are configured like this:
 
-- Username: `root`
-- Password: `password123`
+* Username: `root`
+* Password: `password123`
 
 It can be changed with Docker ARG build arguments:
 
-```docker
+```bash
 # Arguement for Password
-ARG PASSWORD=root
-ARG USERNAME=<your password>
+ARG PASSWORD=your-password
 ```
 
 Or by using Makefile:
 
 ```bash
-$ make build DOCKER_ARGS='--build-arg PASSWORD=<your-password-secure>'
+make build DOCKER_ARGS='--build-arg PASSWORD=<your-password-secure>'
 ```
 
 ## Configure network interfaces
@@ -49,7 +50,7 @@ $ make build DOCKER_ARGS='--build-arg PASSWORD=<your-password-secure>'
 ### Single homed interface in access mode
 
 ```bash
-$ ifconfig eth1 10.1.10.11 netmask 255.255.255.0
+ifconfig eth1 10.1.10.11 netmask 255.255.255.0
 ```
 
 ### Single homed interface in trunk mode
@@ -133,29 +134,31 @@ Inetsix Network MultiTool (with NGINX) - 4636efd4660c - 172.17.0.3/16 - HTTP: 11
 
 If these environment variables are absent/not-provided, the container will listen on normal/default ports 80 and 443.
 
+## How to use this image on __host network__ ?
 
-## How to use this image on **host network** ?
-
-Sometimes you want to do testing using the **host network**.  This can be achieved by running the multitool using host networking.
+Sometimes you want to do testing using the __host network__.  This can be achieved by running the multitool using host networking.
 
 ### Docker:
-```
-$ docker run --network host -d titom73/multitool
+
+```bash
+docker run --network host -d titom73/multitool
 ```
 
-**Note:** If port 80 and/or 443 are already busy on the host, then use pass the extra arguments to multitool, so it can listen on a different port, as shown below:
+__Note:__ If port 80 and/or 443 are already busy on the host, then use pass the extra arguments to multitool, so it can listen on a different port, as shown below:
 
-```
-$ docker run --network host -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -d titom73/multitool
+```bash
+docker run --network host -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -d titom73/multitool
 ```
 
 ### Kubernetes:
+
 For Kubernetes, there is YAML/manifest file [`multitool-daemonset.yaml`](https://github.com/titom73/docker-network-toolkit/blob/main/multitool/kubernetes/multiool-daemonset.yml) in the `kubernetes` directory, that will run an instance of the multitool on all hosts in the cluster using host networking.
 
-```
-$ kubectl apply -f multitool-daemonset.yaml
+```bash
+kubectl apply -f multitool-daemonset.yaml
 ```
 
-**Notes:**
+__Notes:__
+
 * You can pass additional parameter `--namespace=<your-desired-namespace>` to the above kubectl command.
 * Due to a possibility of something (some service) already listening on port 80 and 443 on the worker nodes, the `daemonset` is configured to run multitool on port `1180` and `11443`. You can change this in the YAML file if you want.
