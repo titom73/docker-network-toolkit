@@ -23,15 +23,18 @@ This Syslog-NG container is based on the official `balabit/syslog-ng:latest` ima
 The container uses a custom `syslog-ng.conf` configuration with the following features:
 
 #### Sources
+
 - **s_local**: Internal syslog messages from the container
 - **s_network_udp**: Network syslog via UDP on port 514
 - **s_network_tcp**: Network syslog via TCP on port 6601 with RFC5424 protocol support
 
 #### Destinations
+
 - **d_messages**: Standard syslog format to `/var/log/messages`
 - **d_messages_kv**: Key-value pair format to `/var/log/messages-kv.log` with ISO timestamp and all name-value pairs
 
 #### Options
+
 - **keep-hostname**: Preserves original hostname from syslog messages
 - **stats-freq**: Statistics disabled (set to 0)
 - **flush-lines**: Immediate flushing of log lines
