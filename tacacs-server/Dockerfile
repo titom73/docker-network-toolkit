@@ -1,5 +1,5 @@
 # Compile tac_plus
-FROM ubuntu:20.04 as build
+FROM alpine:3.14 as build
 
 LABEL Name=tac_plus
 LABEL Version=1.3.0
@@ -11,16 +11,17 @@ COPY  $SRC_VERSION.tar.gz /tac_plus.tar.gz
 
 RUN echo "${SRC_HASH}  /tac_plus.tar.gz" | sha256sum -c -
 
-RUN apt update && \
-    apt install -y gcc libc6-dev make bzip2 libdigest-md5-perl libnet-ldap-perl libio-socket-ssl-perl && \
+RUN apk update && \
+    apk add build-base bzip2 perl perl-digest-md5 perl-ldap perl-io-socket-ssl bash tcpdump && \
     tar -xzf /tac_plus.tar.gz && \
+    ls && \
     cd /event-driven-servers-$SRC_VERSION && \
     ./configure --prefix=/tacacs && \
-    make && \
-    make install
+    env SHELL=/bin/bash make && \
+    env SHELL=/bin/bash make install
 
 # Move to a clean, small image
-FROM ubuntu:20.04
+FROM alpine:3.14
 
 LABEL   "org.opencontainers.image.title"="Tacacs+" \
         "org.opencontainers.artifact.description"="A simple Tacacs+ docker image." \
@@ -31,18 +32,17 @@ LABEL   "org.opencontainers.image.title"="Tacacs+" \
         "org.opencontainers.image.licenses"="Apache-2.0" \
         "org.opencontainers.image.vendor"="TiTom73" \
         "org.opencontainers.image.authors"="Thomas Grimonet" \
-        "org.opencontainers.image.base.name"="ubuntu:20.04" \
+        "org.opencontainers.image.base.name"="alpine:3.14" \
         "org.opencontainers.image.revision"="dev" \
         "org.opencontainers.image.version"="latest"
-
 
 COPY --from=build /tacacs /tacacs
 COPY tac_plus.sample.cfg /etc/tac_plus/tac_plus.cfg
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN apt update && \
-    apt install -y libdigest-md5-perl libnet-ldap-perl  libio-socket-ssl-perl && \
-    rm -rf /var/cache/apt/*
+RUN apk update && \
+    apk add perl-digest-md5 perl-ldap perl perl-io-socket-ssl && \
+    rm -rf /var/cache/apk/*
 
 EXPOSE 49
 

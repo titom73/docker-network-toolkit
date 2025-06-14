@@ -6,17 +6,15 @@ mgmt:
 topology:
   kinds:
     ceos:
-      image: arista/ceos:${EOS_VERSION:=4.31.4M}
+      image: ${CEOS_IMAGE:-arista/arm/ceos:4.34.1-eft3}
   nodes:
     ceos:
       kind: ceos
       startup-config: ceos.conf
       mgmt-ipv4: "192.168.11.11"
-    # tacacs:
-    #   image: git.as73.inetsix.net/docker/tacacs:${IMAGE_VERSION:=dev}
-    #   mgmt-ipv4: 192.168.11.2
-    #   kind: linux
-    #   publish:
-    #     - 49:49
-    #   binds:
-    #     - tac_plus.cfg:/etc/tac_plus/tac_plus.cfg
+    tacacs:
+      image: tac_plus:alpine
+      mgmt-ipv4: 192.168.11.2
+      kind: linux
+      binds:
+        - tac_plus.cfg:/etc/tac_plus/tac_plus.cfg
