@@ -2,14 +2,16 @@
 IMAGE_NAME ?= titom73/ssh-server
 IMAGE_TAG ?= dev
 DOCKER_ARGS ?=
-
-.PHONY: help
-help: ## Display help message (*: main entry points / []: part of an entry point)
-	@grep -E '^[0-9a-zA-Z_-]+\.*[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+DOCKER_FILE ?= Dockerfile
+PLATFORM ?= $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
 
 .PHONY: build
-build:  ## Build image locally
-	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) $(DOCKER_ARGS) .
+build:  ## Build and load image locally for local platform
+	docker buildx build --platform linux/$(PLATFORM) --load -t $(IMAGE_NAME):$(IMAGE_TAG) -f $(DOCKER_FILE) .
+
+.PHONY: buildx
+buildx:  ## Build and push image for multiple platforms
+	docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE_NAME):$(IMAGE_TAG) -f $(DOCKER_FILE) . --push
 
 .PHONY: push
 push:  ## Push image to remote registry

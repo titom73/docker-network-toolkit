@@ -1,10 +1,16 @@
 
 IMAGE_NAME ?= git.as73.inetsix.net/docker/radtest
-IMAGE_TAG ?= latest
+IMAGE_TAG ?= dev
+DOCKER_FILE ?= Dockerfile
+PLATFORM ?= $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
 
 .PHONY: build
-build:  ## Build image locally
-	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
+build:  ## Build and load image locally for local platform
+	docker buildx build --platform linux/$(PLATFORM) --load -t $(IMAGE_NAME):$(IMAGE_TAG) -f $(DOCKER_FILE) .
+
+.PHONY: buildx
+buildx:  ## Build and push image for multiple platforms
+	docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE_NAME):$(IMAGE_TAG) -f $(DOCKER_FILE) . --push
 
 .PHONY: push
 push:  ## Push image to remote registry
