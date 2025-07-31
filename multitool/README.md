@@ -92,10 +92,12 @@ topology:
         TMODE: lacp
       exec:
         - sleep 10
-        - vconfig add team0 101
-        - ifconfig team0.101 10.10.101.32 netmask 255.255.255.0
+        - vconfig add bond0 103
+        - ifconfig bond0.103 10.1.3.13 netmask 255.255.255.0
         - ip route del default
-        - ip route add default via 10.10.101.1
+        - ip route add default via 10.1.3.1
+        - vconfig add bond0 200
+        - ifconfig bond0.200 10.1.200.13 netmask 255.255.255.0
 ```
 
 Shell configuration

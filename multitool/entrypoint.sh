@@ -87,99 +87,128 @@ fi
 check=$( cat /sys/class/net/eth1/operstate 2>/dev/null )
 
 while [ "up" != "$check" ] ; do
-    echo "waiting for interface to come up"
+    echo "waiting for eth1 interface to come up"
+    sleep 1
     check=$( cat /sys/class/net/eth1/operstate 2>/dev/null )
 done
 
 check=$( cat /sys/class/net/eth2/operstate 2>/dev/null )
 
 while [ "up" != "$check" ] ; do
-    echo "waiting for interface to come up"
-    check=$( cat /sys/class/net/eth1/operstate 2>/dev/null )
+    echo "waiting for eth2 interface to come up"
+    sleep 1
+    check=$( cat /sys/class/net/eth2/operstate 2>/dev/null )
 done
 
-cat /sys/class/net/eth1/operstate
-cat /sys/class/net/eth1/operstate
+echo "eth1 state: $(cat /sys/class/net/eth1/operstate)"
+echo "eth2 state: $(cat /sys/class/net/eth2/operstate)"
 
 ################
-# Teaming setup
+# Bonding setup (using kernel bonding instead of teamd for better compatibility)
 ################
 
-cat << EOF > /var/tmp/teamd-lacp.conf
-{
-   "device": "team0",
-   "runner": {
-       "name": "lacp",
-       "active": true,
-       "fast_rate": true,
-       "tx_hash": ["eth", "ipv4", "ipv6"]
-   },
-     "link_watch": {"name": "ethtool"},
-     "ports": {"eth1": {}, "eth2": {}}
-}
-EOF
-
-cat << EOF > /var/tmp/teamd-static.conf
-{
- "device": "team0",
- "runner": {"name": "roundrobin"},
- "ports": {"eth1": {}, "eth2": {}}
-}
-EOF
-
-cat << EOF > /var/tmp/teamd-active-backup.conf
-{
-  "device": "team0",
-  "runner": {"name": "activebackup"},
-  "link_watch": {"name": "ethtool"},
-  "ports": {
-    "$TACTIVE": {
-      "prio": 100
-    },
-    "$TBACKUP": {
-      "prio": -10
-    }
-  }
-}
-EOF
-
-if [ "$TMODE" == 'lacp' ]; then
-  TARG='/var/tmp/teamd-lacp.conf'
-elif [ "$TMODE" == 'static' ]; then
-  TARG='/var/tmp/teamd-static.conf'
-elif [ "$TMODE" == 'active-backup' ]; then
-  TARG='/var/tmp/teamd-active-backup.conf'
-fi
+# Load bonding module if not already loaded
+modprobe bonding 2>/dev/null || true
 
 if [ "$TMODE" == 'lacp' ] || [ "$TMODE" == 'static' ] || [ "$TMODE" == 'active-backup' ]; then
-  teamd -v
-  teamd -k -f $TARG
+  echo "Setting up bond0 interface with mode: $TMODE"
+
+  # Remove any existing bond0
+  if [ -d /sys/class/net/bond0 ]; then
+    echo "Removing existing bond0"
+    echo "-bond0" > /sys/class/net/bonding_masters 2>/dev/null || true
+  fi
+
+  # Create bond0 interface
+  echo "+bond0" > /sys/class/net/bonding_masters
+
+  # Configure bonding mode
+  case "$TMODE" in
+    "lacp")
+      echo "4" > /sys/class/net/bond0/bonding/mode  # 802.3ad (LACP)
+      echo "fast" > /sys/class/net/bond0/bonding/lacp_rate
+      echo "layer3+4" > /sys/class/net/bond0/bonding/xmit_hash_policy
+      echo "100" > /sys/class/net/bond0/bonding/miimon
+      ;;
+    "static")
+      echo "balance-rr" > /sys/class/net/bond0/bonding/mode  # round-robin
+      echo "100" > /sys/class/net/bond0/bonding/miimon
+      ;;
+    "active-backup")
+      echo "active-backup" > /sys/class/net/bond0/bonding/mode
+      echo "100" > /sys/class/net/bond0/bonding/miimon
+      # Set primary slave
+      echo "$TACTIVE" > /sys/class/net/bond0/bonding/primary
+      ;;
+  esac
+
+  # Bring down slave interfaces
   ip link set eth1 down
   ip link set eth2 down
-  teamd -d -r -f $TARG
 
-  ip link set team0 up
-  UPLINK="team"
+  # Add slaves to bond
+  echo "+eth1" > /sys/class/net/bond0/bonding/slaves
+  echo "+eth2" > /sys/class/net/bond0/bonding/slaves
+
+  # Bring up bond interface
+  ip link set bond0 up
+
+  echo "Bond0 successfully configured with slaves: $(cat /sys/class/net/bond0/bonding/slaves)"
+  echo "Bond0 mode: $(cat /sys/class/net/bond0/bonding/mode)"
+  echo "Bond0 status: $(cat /sys/class/net/bond0/bonding/mii_status)"
+
+  UPLINK="bond"
+else
+  echo "No bonding configured (TMODE=$TMODE)"
 fi
 
 ######################
 # Enabling SSH server
 ######################
 
-/usr/sbin/sshd -D
+echo "Starting SSH daemon..."
+/usr/sbin/sshd
 
 ###############
 # Enabling LLDP
 ###############
 
+echo "Starting LLDP daemon..."
 lldpad -d
-for i in `ls /sys/class/net/ | grep 'eth\|ens\|eno'`
+
+# Wait a bit for lldpad to initialize
+sleep 2
+
+echo "Configuring LLDP on network interfaces..."
+for i in `ls /sys/class/net/ | grep -E '^(eth|ens|eno|bond)'`
 do
-    lldptool set-lldp -i $i adminStatus=rxtx
-    lldptool -T -i $i -V sysName enableTx=yes
-    lldptool -T -i $i -V portDesc enableTx=yes
-    lldptool -T -i $i -V sysDesc enableTx=yes
+    echo "Configuring LLDP on interface: $i"
+    lldptool set-lldp -i $i adminStatus=rxtx 2>/dev/null || echo "Warning: Could not configure LLDP on $i"
+    lldptool -T -i $i -V sysName enableTx=yes 2>/dev/null || true
+    lldptool -T -i $i -V portDesc enableTx=yes 2>/dev/null || true
+    lldptool -T -i $i -V sysDesc enableTx=yes 2>/dev/null || true
 done
+
+#########################
+# Network status summary
+#########################
+
+echo "=== Network Configuration Summary ==="
+echo "Hostname: $(hostname)"
+echo "Container IP: ${CONTAINER_IP}"
+echo "Uplink type: ${UPLINK}"
+
+if [ "$UPLINK" == "bond" ]; then
+    echo "Bond status:"
+    echo "  Mode: $(cat /sys/class/net/bond0/bonding/mode 2>/dev/null || echo 'N/A')"
+    echo "  Slaves: $(cat /sys/class/net/bond0/bonding/slaves 2>/dev/null || echo 'N/A')"
+    echo "  MII Status: $(cat /sys/class/net/bond0/bonding/mii_status 2>/dev/null || echo 'N/A')"
+fi
+
+echo "Active network interfaces:"
+ip link show | grep -E '^[0-9]+:' | awk '{print "  " $2}' | sed 's/:$//'
+
+echo "=== End Network Summary ==="
 
 ##########################
 # Continue to execute CMD

@@ -1,3 +1,8 @@
 {
-    "makefile.extensionOutputFolder": "./.vscode"
+    "makefile.extensionOutputFolder": "./.vscode",
+    "workbench.colorCustomizations": {
+        "statusBar.background": "#40513B",
+        "statusBar.border": "#40513B",
+        "statusBar.foreground": "#EDF1D6"
+    }
 }
