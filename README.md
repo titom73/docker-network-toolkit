@@ -5,12 +5,35 @@
 
 A simple repository with various Dockerfile to build different network services:
 
+## Using the unified Makefile
+
+From the repository root, you can control all images with a single Makefile:
+
+```bash
+# Show available commands and projects
+make help
+make projects
+
+# Build one project (two equivalent forms)
+make build PROJECT=multitool
+make multitool.build
+
+# Multi-arch build + push
+make buildx PROJECT=freeradius-server
+
+# Push (only if the project defines a push target)
+make syslog.push
+```
+
+See [COMMANDS.md](./COMMANDS.md) for more examples and details.
+
+## Build images
+
 - A [multitool](multitool) image to be used as network client:
 
 ```bash
-# Build image
-cd multitool
-make build
+# Build image from repo root
+make multitool.build
 
 # Latest small image
 docker run -d --rm git.as73.inetsix.net/docker/multitool:latest
@@ -21,9 +44,8 @@ docker exec -it 86 ash
 - A simple [Freeradius](freeradius-server) server:
 
 ```bash
-# Build image
-cd freeradius-server
-make build
+# Build image from repo root
+make freeradius-server.build
 
 # Run latest dev image
 docker run -d --name freeradius \
@@ -35,9 +57,8 @@ docker run -d --name freeradius \
 - A Remote [Syslog](/syslog/) server:
 
 ```bash
-# Build image
-cd syslog
-make build
+# Build image from repo root
+make syslog.build
 
 # Run container
 docker run -d --name syslog-server \
@@ -48,9 +69,8 @@ docker run -d --name syslog-server \
 - A [TACACS+](./tacacs-server/) docker image:
 
 ```bash
-# Build image
-cd tacacs-server
-make build
+# Build image from repo root
+make tacacs-server.build
 
 # Run latest dev image
 docker run -itd \
@@ -70,6 +90,16 @@ docker run --rm \
   --volume /path/to/authorized_keys:/root/.ssh/authorized_keys \
   git.as73.inetsix.net/docker/ssh-server
 ```
+
+To build this image locally using the root Makefile:
+
+```bash
+make ssh-server.build
+```
+
+## Documentation
+
+For the full list of commands, variables, and examples, see the root-level documentation: [COMMANDS.md](./COMMANDS.md)
 
 ## License
 
