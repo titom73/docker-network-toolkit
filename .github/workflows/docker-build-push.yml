@@ -38,7 +38,7 @@ jobs:
           done
 
           echo "Available projects with Dockerfile: ${available_projects[*]}"
-          projects_json=$(printf '%s\n' "${available_projects[@]}" | jq -R . | jq -s .)
+          projects_json=$(printf '%s\n' "${available_projects[@]}" | jq -R . | jq -s -c .)
           echo "available_projects=${projects_json}" >> $GITHUB_OUTPUT
 
       - name: Get changed files
