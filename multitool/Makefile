@@ -1,5 +1,8 @@
 
-IMAGE_NAME ?= git.as73.inetsix.net/docker/multitool
+# Container image configuration
+REGISTRY_PREFIX ?= git.as73.inetsix.net/docker
+PROJECT_NAME ?= multitool
+IMAGE_NAME ?= $(REGISTRY_PREFIX)/$(PROJECT_NAME)
 IMAGE_TAG ?= dev
 DOCKER_FILE ?= Dockerfile
 PLATFORM ?= $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')

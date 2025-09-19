@@ -15,14 +15,25 @@
 # - Shortcut per-project:     make ssh-server.build  | make freeradius-server.run | make ssh-server.test
 #
 # Variables you can forward to sub-makes (optional):
-#   IMAGE_TAG, IMAGE_NAME, DOCKER_FILE, PLATFORM, SHA256, VERSION, DOCKER_ARGS, RADIUS_CONTAINER
-# Example: make build PROJECT=tacacs-server IMAGE_TAG=latest
+#   REGISTRY_PREFIX, IMAGE_NAME, IMAGE_TAG, DOCKER_FILE, PLATFORM, SHA256, VERSION, DOCKER_ARGS, RADIUS_CONTAINER
+#
+# Container naming:
+#   REGISTRY_PREFIX: Default registry/namespace (default: git.as73.inetsix.net/docker)
+#   IMAGE_NAME: Full image name override (default: ${REGISTRY_PREFIX}/${PROJECT})
+#
+# Examples:
+#   make build PROJECT=multitool                                    # Uses git.as73.inetsix.net/docker/multitool
+#   make build PROJECT=multitool REGISTRY_PREFIX=myregistry.com     # Uses myregistry.com/multitool
+#   make build PROJECT=multitool IMAGE_NAME=custom/image:tag        # Uses custom/image:tag
 
 # Nice output and consistent ordering
 MAKEFLAGS += --no-print-directory
 # Use bash for robust piping/errexit behavior across platforms
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
+
+# Container registry configuration
+REGISTRY_PREFIX ?= git.as73.inetsix.net/docker
 
 # Discover all project folders that contain a Makefile (one level deep)
 PROJECTS := $(sort $(patsubst %/,%,$(dir $(wildcard */Makefile))))
@@ -34,7 +45,7 @@ PUSH_PROJECTS := $(strip $(shell for d in $(PROJECTS); do \
 	done))
 
 # Variables to forward to sub-make calls if set
-FORWARD_VARS ?= IMAGE_TAG IMAGE_NAME DOCKER_FILE PLATFORM SHA256 VERSION DOCKER_ARGS RADIUS_CONTAINER
+FORWARD_VARS ?= REGISTRY_PREFIX IMAGE_TAG IMAGE_NAME DOCKER_FILE PLATFORM SHA256 VERSION DOCKER_ARGS RADIUS_CONTAINER
 MAKE_ARGS     := $(foreach v,$(FORWARD_VARS),$(if $($(v)),$(v)=$($(v)),))
 
 # ------------- Utilities -------------
@@ -42,8 +53,12 @@ MAKE_ARGS     := $(foreach v,$(FORWARD_VARS),$(if $($(v)),$(v)=$($(v)),))
 .PHONY: help
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_.-]+:.*##/ {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo "\nProjects:"; echo "  $(PROJECTS)" | fold -s -w 100 | sed 's/^/  /'
-	@echo "\nShortcuts:"; echo "  <project>.build  <project>.buildx  <project>.push  <project>.test  <project>.run  <project>.sh  <project>.log"
+	@echo "Projects:"; echo "  $(PROJECTS)" | fold -s -w 100 | sed 's/^/  /'
+	@echo "Shortcuts:"; echo "  <project>.build  <project>.buildx  <project>.push  <project>.test  <project>.run  <project>.sh  <project>.log"
+	@echo "Container naming:"
+	@echo "  * REGISTRY_PREFIX=$(REGISTRY_PREFIX)"
+	@echo "  * Override with: make build PROJECT=<name> REGISTRY_PREFIX=<your-registry>"
+	@echo "  * Full override:  make build PROJECT=<name> IMAGE_NAME=<full-image-name>"
 
 .PHONY: projects
 projects: ## List all detected projects
