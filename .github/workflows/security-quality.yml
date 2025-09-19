@@ -1,0 +1,227 @@
+name: Security and Quality Checks
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  schedule:
+    # Run security scans weekly
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  # Detect which projects have changes
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.changes.outputs.projects }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Discover available projects
+        id: discover
+        run: |
+          # Discover projects based on presence of Dockerfile
+          available_projects=()
+          for dir in */; do
+            project_name=${dir%/}
+            if [ -f "$project_name/Dockerfile" ]; then
+              available_projects+=("$project_name")
+            fi
+          done
+
+          echo "Available projects with Dockerfile: ${available_projects[*]}"
+          projects_json=$(printf '%s\n' "${available_projects[@]}" | jq -R . | jq -s .)
+          echo "available_projects=${projects_json}" >> $GITHUB_OUTPUT
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          files_yaml: |
+            freeradius-client:
+              - freeradius-client/**
+            freeradius-server:
+              - freeradius-server/**
+            multitool:
+              - multitool/**
+            ssh-server:
+              - ssh-server/**
+            syslog:
+              - syslog/**
+            tacacs-server:
+              - tacacs-server/**
+
+      - name: List all changed projects
+        id: changes
+        run: |
+          changed_projects=()
+          available_projects='${{ steps.discover.outputs.available_projects }}'
+
+          # Check changes for projects that actually have Dockerfiles
+          if [ "${{ steps.changed-files.outputs.freeradius-client_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "freeradius-client"; then
+            changed_projects+=("freeradius-client")
+          fi
+          if [ "${{ steps.changed-files.outputs.freeradius-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "freeradius-server"; then
+            changed_projects+=("freeradius-server")
+          fi
+          if [ "${{ steps.changed-files.outputs.multitool_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "multitool"; then
+            changed_projects+=("multitool")
+          fi
+          if [ "${{ steps.changed-files.outputs.ssh-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "ssh-server"; then
+            changed_projects+=("ssh-server")
+          fi
+          if [ "${{ steps.changed-files.outputs.syslog_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "syslog"; then
+            changed_projects+=("syslog")
+          fi
+          if [ "${{ steps.changed-files.outputs.tacacs-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "tacacs-server"; then
+            changed_projects+=("tacacs-server")
+          fi
+
+          # On schedule or manual dispatch, check all available projects (those with Dockerfiles)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "schedule" ]]; then
+            changed_projects=($(echo "$available_projects" | jq -r '.[]'))
+          fi
+
+          projects_json=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s .)
+          echo "projects=${projects_json}" >> $GITHUB_OUTPUT
+          echo "Changed projects with Dockerfiles: ${changed_projects[*]}"
+
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          projects='${{ steps.changes.outputs.projects }}'
+          if [ "$projects" != "[]" ] && [ "$projects" != "" ]; then
+            matrix=$(echo "$projects" | jq -c '{project: .}')
+            echo "matrix=$matrix" >> $GITHUB_OUTPUT
+            echo "Matrix: $matrix"
+          else
+            echo "matrix={\"project\":[]}" >> $GITHUB_OUTPUT
+            echo "No projects to check"
+          fi
+
+  # Dockerfile linting and security scanning
+  dockerfile-checks:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.projects != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.detect-changes.outputs.matrix)}}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if Dockerfile exists
+        id: dockerfile-check
+        run: |
+          if [ -f "${{ matrix.project }}/Dockerfile" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Dockerfile found for ${{ matrix.project }}"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "❌ No Dockerfile found for ${{ matrix.project }}"
+          fi
+
+      - name: Lint Dockerfile with hadolint
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ matrix.project }}/Dockerfile
+          format: sarif
+          output-file: hadolint-${{ matrix.project }}.sarif
+          no-fail: true
+
+      - name: Upload Hadolint results
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: hadolint-${{ matrix.project }}.sarif
+        continue-on-error: true
+
+      - name: Set up Docker Buildx
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image for security scanning
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.project }}
+          file: ${{ matrix.project }}/Dockerfile
+          tags: local/${{ matrix.project }}:test
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: local/${{ matrix.project }}:test
+          format: sarif
+          output: trivy-${{ matrix.project }}.sarif
+
+      - name: Upload Trivy scan results
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-${{ matrix.project }}.sarif
+        continue-on-error: true
+
+      - name: Generate security report
+        if: steps.dockerfile-check.outputs.exists == 'true'
+        run: |
+          echo "## 🔒 Security Report for ${{ matrix.project }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Dockerfile Linting" >> $GITHUB_STEP_SUMMARY
+          if [ -f "hadolint-${{ matrix.project }}.sarif" ]; then
+            echo "- ✅ Hadolint scan completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Hadolint scan failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🛡️ Vulnerability Scanning" >> $GITHUB_STEP_SUMMARY
+          if [ -f "trivy-${{ matrix.project }}.sarif" ]; then
+            echo "- ✅ Trivy security scan completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ Trivy security scan failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Validate Makefile integration
+  makefile-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test Makefile commands
+        run: |
+          echo "🧪 Testing Makefile integration..."
+
+          # Test basic commands
+          make help
+          make projects
+
+          # Discover and test build validation for projects with Dockerfiles
+          for dir in */; do
+            project=${dir%/}
+            if [ -f "$project/Dockerfile" ]; then
+              echo "Testing project: $project (has Dockerfile)"
+              # Test dry-run build
+              make build PROJECT=$project --dry-run || echo "❌ Build test failed for $project"
+            else
+              echo "⚠️ Skipping $project (no Dockerfile)"
+            fi
+          done
+
+      - name: Test container naming
+        run: |
+          echo "🏷️ Testing container naming configuration..."
+          bash validate-examples.sh
