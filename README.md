@@ -1,7 +1,7 @@
 
 # Docker Network Toolkit
 
-A comprehensive collection of Docker containers for network testing, labs, and troubleshooting.
+A comprehensive collection of Docker containers for network testing, labs, and troubleshooting. This toolkit provides essential networking services and debugging tools designed for containerized environments, network labs, and testing scenarios.
 
 ## 🚀 Features
 
@@ -10,139 +10,184 @@ A comprehensive collection of Docker containers for network testing, labs, and t
 - **Security scanning**: Automated vulnerability and quality checks
 - **Unified build system**: Single Makefile to manage all projects
 - **Flexible registry support**: Configurable container registry and naming
+- **Ready-to-use**: Pre-configured services with sensible defaults
 
 ## 📦 Available Images
 
 All images are available on GitHub Container Registry: `ghcr.io/titom73/`
 
-- **`multitool`**: Network debugging and testing tools
-- **`ssh-server`**: SSH server for remote access testing
-- **`freeradius-server`**: RADIUS authentication server
-- **`freeradius-client`**: RADIUS client tools
-- **`syslog`**: Syslog server for log collection
-- **`tacacs-server`**: TACACS+ authentication server
+### 🛠️ Network Tools
 
-Images are available in 2 namespaces:
+#### **multitool** - Network Debugging Swiss Army Knife
 
-- Private: git.as73.inetsix.net/docker/
-- Public: ghcr.io/titom73/
+Alpine-based container packed with essential network debugging and testing tools.
 
-## 🛠️ Using the unified Makefile
-
-From the repository root, you can control all images with a single Makefile:
+**Includes**: curl, wget, dig, nslookup, ping, traceroute, netcat, tcpdump, iperf3, nmap, and more.
 
 ```bash
-# Show available commands and projects
+docker pull ghcr.io/titom73/multitool:latest
+```
+
+#### **ssh-server** - SSH Jump Host
+
+Lightweight SSH server perfect for jump hosts, tunneling, and remote access testing.
+
+**Features**: Key-based authentication, configurable users, containerlab integration.
+
+```bash
+docker pull ghcr.io/titom73/ssh-server:latest
+```
+
+### 🔐 Authentication Services
+
+#### **freeradius-server** - RADIUS Authentication Server
+
+Complete FreeRADIUS server for network authentication and authorization.
+
+**Features**: Pre-configured for testing, supports multiple authentication methods, CoA testing.
+
+```bash
+docker pull ghcr.io/titom73/freeradius-server:latest
+```
+
+#### **freeradius-client** - RADIUS Client Tools
+
+RADIUS client utilities for testing RADIUS servers and authentication flows.
+
+**Includes**: radtest, radclient, and other RADIUS testing tools.
+
+```bash
+docker pull ghcr.io/titom73/freeradius-client:latest
+```
+
+#### **tacacs-server** - TACACS+ Authentication Server
+
+TACACS+ server for device authentication and command authorization.
+
+**Features**: Pre-configured for network device testing, supports command authorization.
+
+```bash
+docker pull ghcr.io/titom73/tacacs-server:latest
+```
+
+### � Log Management
+
+#### **syslog** - Syslog Server
+
+Centralized syslog server for collecting and managing network device logs.
+
+**Features**: UDP/TCP syslog reception, configurable logging levels, log rotation.
+
+```bash
+docker pull ghcr.io/titom73/syslog:latest
+```
+
+## 🏁 Getting Started
+
+### Quick Start with Pre-built Images
+
+1. **Pull and run a network debugging container:**
+
+```bash
+docker run -it --rm ghcr.io/titom73/multitool:latest
+# Now you have access to all network debugging tools
+```
+
+2. **Set up a RADIUS server for testing:**
+
+```bash
+docker run -d --name radius-server \
+  -p 1812:1812/udp \
+  -p 1813:1813/udp \
+  ghcr.io/titom73/freeradius-server:latest
+```
+
+3. **Create an SSH jump host:**
+
+```bash
+docker run -d --name ssh-jump \
+  -p 2222:22 \
+  -e KEYPAIR_LOGIN=true \
+  -v ~/.ssh/authorized_keys:/root/.ssh/authorized_keys \
+  ghcr.io/titom73/ssh-server:latest
+```
+
+### Using with Docker Compose
+
+Create a `docker-compose.yml` for a complete testing environment:
+
+```yaml
+version: '3.8'
+services:
+  multitool:
+    image: ghcr.io/titom73/multitool:latest
+    container_name: network-tools
+    stdin_open: true
+    tty: true
+
+  radius:
+    image: ghcr.io/titom73/freeradius-server:latest
+    container_name: radius-server
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+
+  syslog:
+    image: ghcr.io/titom73/syslog:latest
+    container_name: syslog-server
+    ports:
+      - "514:514/udp"
+```
+
+Run with: `docker-compose up -d`
+
+## 🔨 Manual Build Instructions
+
+### Prerequisites
+
+- Docker Engine
+- Make (for unified Makefile)
+- Git
+
+### Building Individual Images
+
+Clone the repository and use the unified Makefile:
+
+```bash
+# Clone the repository
+git clone https://github.com/titom73/docker-network-toolkit.git
+cd docker-network-toolkit
+
+# Show available projects and commands
 make help
 make projects
 
-# Build one project (two equivalent forms)
+# Build a specific image
 make build PROJECT=multitool
+make build PROJECT=freeradius-server
+make build PROJECT=ssh-server
+
+# Alternative syntax (equivalent)
 make multitool.build
-
-# Multi-arch build + push
-make buildx PROJECT=freeradius-server
-
-# Push (only if the project defines a push target)
-make syslog.push
-```
-
-See [COMMANDS.md](./COMMANDS.md) for more examples and details.
-
-## Build images
-
-- A [multitool](multitool) image to be used as network client:
-
-```bash
-# Build image from repo root
-make multitool.build
-
-# Latest small image
-docker run -d --rm git.as73.inetsix.net/docker/multitool:latest
-86........
-docker exec -it 86 ash
-```
-
-- A simple [Freeradius](freeradius-server) server:
-
-```bash
-# Build image from repo root
 make freeradius-server.build
-
-# Run latest dev image
-docker run -d --name freeradius \
-  -p 1812:1812/udp \
-  -p 1813:1813/udp \
-  git.as73.inetsix.net/docker/freeradius:latest
+make ssh-server.build
 ```
 
-- A Remote [Syslog](/syslog/) server:
+### Multi-Architecture Builds
+
+Build for multiple architectures (requires Docker Buildx):
 
 ```bash
-# Build image from repo root
-make syslog.build
+# Build and push multi-arch image
+make buildx PROJECT=multitool
 
-# Run container
-docker run -d --name syslog-server \
-  -p 514:514/udp \
-  git.as73.inetsix.net/docker/syslog:dev
+# Build for specific platforms
+docker buildx build --platform linux/amd64,linux/arm64 -t my-multitool ./multitool/
 ```
 
-- A [TACACS+](./tacacs-server/) docker image:
+### Custom Registry Configuration
 
-```bash
-# Build image from repo root
-make tacacs-server.build
-
-# Run latest dev image
-docker run -itd \
-  --network tacacs-testing \
-  --name=tacacs \
-  -p 49:49 \
-  git.as73.inetsix.net/docker/tacplus:dev
-```
-
-- A simple [SSH Jumphost](ssh-server) to use with mysocket.io & containerlabs:
-
-```bash
-docker pull git.as73.inetsix.net/docker/ssh-server:latest
-docker run --rm \
-  --publish=1337:22 \
-  --env KEYPAIR_LOGIN=true \
-  --volume /path/to/authorized_keys:/root/.ssh/authorized_keys \
-  git.as73.inetsix.net/docker/ssh-server:latest
-```
-
-## 🚀 Automated Builds and Deployment
-
-This repository uses GitHub Actions for automated building and deployment:
-
-### 🏗️ Build Strategy
-- **Smart builds**: Only builds projects with actual changes
-- **Multi-architecture**: Supports `linux/amd64` and `linux/arm64`
-- **Secure**: Images scanned for vulnerabilities before deployment
-- **Fast**: Uses build cache for optimal performance
-
-### 🏷️ Image Tagging
-- **`latest`**: Latest stable version from main branch
-- **`main`**: Latest commit on main branch
-- **`v*`**: Git tag releases (e.g., `v1.2.3`)
-
-### 📦 Using Pre-built Images
-
-```bash
-# Pull latest images from GitHub Container Registry
-docker pull ghcr.io/titom73/multitool:latest
-docker pull ghcr.io/titom73/ssh-server:latest
-docker pull ghcr.io/titom73/freeradius-server:latest
-
-# Use specific versions
-docker pull ghcr.io/titom73/multitool:v1.0.0
-```
-
-### 🔧 Container Registry Configuration
-
-Default registry is GitHub Container Registry (`ghcr.io`), but you can use any registry:
+Build and push to your own registry:
 
 ```bash
 # Use custom registry
@@ -150,7 +195,52 @@ make build PROJECT=multitool REGISTRY_PREFIX=your-registry.com/namespace
 
 # Use Docker Hub
 make build PROJECT=multitool REGISTRY_PREFIX=docker.io/yourusername
+
+# Build and push
+make buildx PROJECT=multitool REGISTRY_PREFIX=your-registry.com/namespace
 ```
+
+### Building All Images
+
+```bash
+# Build all projects
+make build-all
+
+# Or build each individually
+for project in multitool ssh-server freeradius-server freeradius-client syslog tacacs-server; do
+  make build PROJECT=$project
+done
+```
+
+### Advanced Build Options
+
+```bash
+# Build with custom tag
+docker build -t custom-multitool:v1.0 ./multitool/
+
+# Build with build arguments
+docker build --build-arg VERSION=latest -t multitool ./multitool/
+
+# Build without cache
+docker build --no-cache -t multitool ./multitool/
+```
+
+## 🚀 Automated Builds and Deployment
+
+This repository uses GitHub Actions for automated building and deployment:
+
+### 🏗️ Build Strategy
+
+- **Smart builds**: Only builds projects with actual changes
+- **Multi-architecture**: Supports `linux/amd64` and `linux/arm64`
+- **Secure**: Images scanned for vulnerabilities before deployment
+- **Fast**: Uses build cache for optimal performance
+
+### 🏷️ Image Tagging
+
+- **`latest`**: Latest stable version from main branch
+- **`main`**: Latest commit on main branch
+- **`v*`**: Git tag releases (e.g., `v1.2.3`)
 
 ## 📚 Documentation
 
@@ -170,17 +260,3 @@ Automated workflows will test your changes and provide feedback on security and 
 ## 📜 License
 
 This project is licensed under the Apache License 2.0 - see the individual project directories for specific licensing information.
-
-To build this image locally using the root Makefile:
-
-```bash
-make ssh-server.build
-```
-
-## Documentation
-
-For the full list of commands, variables, and examples, see the root-level documentation: [COMMANDS.md](./COMMANDS.md)
-
-## License
-
-Code is under Apache2 License
