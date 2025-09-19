@@ -95,7 +95,7 @@ jobs:
             changed_projects=($(echo "$available_projects" | jq -r '.[]'))
           fi
 
-          projects_json=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s .)
+          projects_json=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s -c .)
           echo "projects=${projects_json}" >> $GITHUB_OUTPUT
           echo "Changed projects with Dockerfiles: ${changed_projects[*]}"
 
