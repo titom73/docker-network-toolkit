@@ -22,6 +22,11 @@ All images are available on GitHub Container Registry: `ghcr.io/titom73/`
 - **`syslog`**: Syslog server for log collection
 - **`tacacs-server`**: TACACS+ authentication server
 
+Images are available in 2 namespaces:
+
+- Private: git.as73.inetsix.net/docker/
+- Public: ghcr.io/titom73/
+
 ## 🛠️ Using the unified Makefile
 
 From the repository root, you can control all images with a single Makefile:
