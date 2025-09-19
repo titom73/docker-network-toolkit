@@ -1,80 +1,80 @@
-# name: Cleanup Old Images
+name: Cleanup Old Images
 
-# on:
-#   schedule:
-#     # Run every Sunday at 2 AM UTC
-#     - cron: '0 2 * * 0'
-#   workflow_dispatch:
+on:
+  schedule:
+    # Run every Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
 
-# env:
-#   REGISTRY: ghcr.io
+env:
+  REGISTRY: ghcr.io
 
-# jobs:
-#   # Discover projects with Dockerfiles
-#   discover-projects:
-#     runs-on: ubuntu-latest
-#     outputs:
-#       projects: ${{ steps.discover.outputs.projects }}
-#       matrix: ${{ steps.set-matrix.outputs.matrix }}
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
+jobs:
+  # Discover projects with Dockerfiles
+  discover-projects:
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.discover.outputs.projects }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-#       - name: Discover projects with Dockerfiles
-#         id: discover
-#         run: |
-#           # Discover projects based on presence of Dockerfile
-#           available_projects=()
-#           for dir in */; do
-#             project_name=${dir%/}
-#             if [ -f "$project_name/Dockerfile" ]; then
-#               available_projects+=("$project_name")
-#             fi
-#           done
+      - name: Discover projects with Dockerfiles
+        id: discover
+        run: |
+          # Discover projects based on presence of Dockerfile
+          available_projects=()
+          for dir in */; do
+            project_name=${dir%/}
+            if [ -f "$project_name/Dockerfile" ]; then
+              available_projects+=("$project_name")
+            fi
+          done
 
-#           echo "Available projects with Dockerfile: ${available_projects[*]}"
-#           projects_json=$(printf '%s\n' "${available_projects[@]}" | jq -R . | jq -s .)
-#           echo "projects=${projects_json}" >> $GITHUB_OUTPUT
+          echo "Available projects with Dockerfile: ${available_projects[*]}"
+          projects_json=$(printf '%s\n' "${available_projects[@]}" | jq -R . | jq -s -c .)
+          echo "projects=${projects_json}" >> $GITHUB_OUTPUT
 
-#       - name: Set matrix
-#         id: set-matrix
-#         run: |
-#           projects='${{ steps.discover.outputs.projects }}'
-#           if [ "$projects" != "[]" ] && [ "$projects" != "" ]; then
-#             matrix=$(echo "$projects" | jq -c '{project: .}')
-#             echo "matrix=$matrix" >> $GITHUB_OUTPUT
-#             echo "Matrix: $matrix"
-#           else
-#             echo "matrix={\"project\":[]}" >> $GITHUB_OUTPUT
-#             echo "No projects with Dockerfiles found"
-#           fi
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          projects='${{ steps.discover.outputs.projects }}'
+          if [ "$projects" != "[]" ] && [ "$projects" != "" ]; then
+            matrix=$(echo "$projects" | jq -c '{project: .}')
+            echo "matrix=$matrix" >> $GITHUB_OUTPUT
+            echo "Matrix: $matrix"
+          else
+            echo "matrix={\"project\":[]}" >> $GITHUB_OUTPUT
+            echo "No projects with Dockerfiles found"
+          fi
 
-#   cleanup:
-#     needs: discover-projects
-#     if: needs.discover-projects.outputs.projects != '[]'
-#     runs-on: ubuntu-latest
-#     environment:
-#       name: production
-#       url: https://github.com/${{ github.repository }}/packages
-#     permissions:
-#       contents: read
-#       packages: write
-#       id-token: write
+  cleanup:
+    needs: discover-projects
+    if: needs.discover-projects.outputs.projects != '[]'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/packages
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
 
-#     strategy:
-#       fail-fast: false
-#       matrix: ${{fromJson(needs.discover-projects.outputs.matrix)}}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.discover-projects.outputs.matrix)}}
 
-#     steps:
-#       - name: Delete old images
-#         uses: actions/delete-package-versions@v4
-#         with:
-#           package-name: ${{ matrix.project }}
-#           package-type: container
-#           min-versions-to-keep: ${{ vars.CLEANUP_KEEP_VERSIONS || 10 }}
-#           delete-only-untagged-versions: true
-#           token: ${{ secrets.REGISTRY_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Delete old images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: ${{ matrix.project }}
+          package-type: container
+          min-versions-to-keep: ${{ vars.CLEANUP_KEEP_VERSIONS || 10 }}
+          delete-only-untagged-versions: true
+          token: ${{ secrets.REGISTRY_TOKEN || secrets.GITHUB_TOKEN }}
 
-#       - name: Cleanup summary
-#         run: |
-#           echo "🧹 Cleaned up old versions of ${{ matrix.project }}" >> $GITHUB_STEP_SUMMARY
+      - name: Cleanup summary
+        run: |
+          echo "🧹 Cleaned up old versions of ${{ matrix.project }}" >> $GITHUB_STEP_SUMMARY
