@@ -8,6 +8,7 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+
 env:
   REGISTRY: ghcr.io
   REGISTRY_PREFIX: ghcr.io/titom73
@@ -20,97 +21,97 @@ jobs:
       projects: ${{ steps.changes.outputs.projects }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Discover available projects
-        id: discover
-        run: |
-          # Discover projects based on presence of Dockerfile
-          available_projects=()
-          for dir in */; do
-            project_name=${dir%/}
-            if [ -f "$project_name/Dockerfile" ]; then
-              available_projects+=("$project_name")
-            fi
-          done
+    - name: Discover available projects
+      id: discover
+      run: |
+        # Discover projects based on presence of Dockerfile
+        available_projects=()
+        for dir in */; do
+          project_name=${dir%/}
+          if [ -f "$project_name/Dockerfile" ]; then
+            available_projects+=("$project_name")
+          fi
+        done
 
-          echo "Available projects with Dockerfile: ${available_projects[*]}"
-          projects_json=$(printf '%s\n' "${available_projects[@]}" | jq -R . | jq -s -c .)
-          echo "available_projects=${projects_json}" >> $GITHUB_OUTPUT
+        echo "Available projects with Dockerfile: ${available_projects[*]}"
+        projects_json=$(printf '%s\n' "${available_projects[@]}" | jq -R . | jq -s -c .)
+        echo "available_projects=${projects_json}" >> $GITHUB_OUTPUT
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v41
-        with:
-          files_yaml: |
-            freeradius-client:
-              - freeradius-client/**
-            freeradius-server:
-              - freeradius-server/**
-            multitool:
-              - multitool/**
-            ssh-server:
-              - ssh-server/**
-            syslog:
-              - syslog/**
-            tacacs-server:
-              - tacacs-server/**
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v41
+      with:
+        files_yaml: |
+          freeradius-client:
+            - freeradius-client/**
+          freeradius-server:
+            - freeradius-server/**
+          multitool:
+            - multitool/**
+          ssh-server:
+            - ssh-server/**
+          syslog:
+            - syslog/**
+          tacacs-server:
+            - tacacs-server/**
 
-      - name: List all changed projects
-        id: changes
-        run: |
-          changed_projects=()
-          available_projects='${{ steps.discover.outputs.available_projects }}'
+    - name: List all changed projects
+      id: changes
+      run: |
+        changed_projects=()
+        available_projects='${{ steps.discover.outputs.available_projects }}'
 
-          # Check changes for projects that actually have Dockerfiles
-          if [ "${{ steps.changed-files.outputs.freeradius-client_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "freeradius-client"; then
-            changed_projects+=("freeradius-client")
-          fi
-          if [ "${{ steps.changed-files.outputs.freeradius-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "freeradius-server"; then
-            changed_projects+=("freeradius-server")
-          fi
-          if [ "${{ steps.changed-files.outputs.multitool_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "multitool"; then
-            changed_projects+=("multitool")
-          fi
-          if [ "${{ steps.changed-files.outputs.ssh-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "ssh-server"; then
-            changed_projects+=("ssh-server")
-          fi
-          if [ "${{ steps.changed-files.outputs.syslog_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "syslog"; then
-            changed_projects+=("syslog")
-          fi
-          if [ "${{ steps.changed-files.outputs.tacacs-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "tacacs-server"; then
-            changed_projects+=("tacacs-server")
-          fi
+        # Check changes for projects that actually have Dockerfiles
+        if [ "${{ steps.changed-files.outputs.freeradius-client_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "freeradius-client"; then
+          changed_projects+=("freeradius-client")
+        fi
+        if [ "${{ steps.changed-files.outputs.freeradius-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "freeradius-server"; then
+          changed_projects+=("freeradius-server")
+        fi
+        if [ "${{ steps.changed-files.outputs.multitool_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "multitool"; then
+          changed_projects+=("multitool")
+        fi
+        if [ "${{ steps.changed-files.outputs.ssh-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "ssh-server"; then
+          changed_projects+=("ssh-server")
+        fi
+        if [ "${{ steps.changed-files.outputs.syslog_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "syslog"; then
+          changed_projects+=("syslog")
+        fi
+        if [ "${{ steps.changed-files.outputs.tacacs-server_any_changed }}" == "true" ] && echo "$available_projects" | jq -r '.[]' | grep -q "tacacs-server"; then
+          changed_projects+=("tacacs-server")
+        fi
 
-          # On tag or manual dispatch, build all available projects (those with Dockerfiles)
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            changed_projects=($(echo "$available_projects" | jq -r '.[]'))
-          fi
+        # On tag or manual dispatch, build all available projects (those with Dockerfiles)
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          changed_projects=($(echo "$available_projects" | jq -r '.[]'))
+        fi
 
-          # If no changes detected but on main, build all available projects (fallback)
-          if [ ${#changed_projects[@]} -eq 0 ] && [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            changed_projects=($(echo "$available_projects" | jq -r '.[]'))
-          fi
+        # If no changes detected but on main, build all available projects (fallback)
+        if [ ${#changed_projects[@]} -eq 0 ] && [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          changed_projects=($(echo "$available_projects" | jq -r '.[]'))
+        fi
 
-          projects_json=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s -c .)
-          echo "projects=${projects_json}" >> $GITHUB_OUTPUT
-          echo "Changed projects with Dockerfiles: ${changed_projects[*]}"
+        projects_json=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s -c .)
+        echo "projects=${projects_json}" >> $GITHUB_OUTPUT
+        echo "Changed projects with Dockerfiles: ${changed_projects[*]}"
 
-      - name: Set matrix
-        id: set-matrix
-        run: |
-          projects='${{ steps.changes.outputs.projects }}'
-          if [ "$projects" != "[]" ] && [ "$projects" != "" ]; then
-            matrix=$(echo "$projects" | jq -c '{project: .}')
-            echo "matrix=$matrix" >> $GITHUB_OUTPUT
-            echo "Matrix: $matrix"
-          else
-            echo "matrix={\"project\":[]}" >> $GITHUB_OUTPUT
-            echo "No projects to build"
-          fi
+    - name: Set matrix
+      id: set-matrix
+      run: |
+        projects='${{ steps.changes.outputs.projects }}'
+        if [ "$projects" != "[]" ] && [ "$projects" != "" ]; then
+          matrix=$(echo "$projects" | jq -c '{project: .}')
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          echo "Matrix: $matrix"
+        else
+          echo "matrix={\"project\":[]}" >> $GITHUB_OUTPUT
+          echo "No projects to build"
+        fi
 
   # Build and push Docker images
   build-and-push:
@@ -129,101 +130,101 @@ jobs:
       matrix: ${{fromJson(needs.detect-changes.outputs.matrix)}}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ vars.REGISTRY || env.REGISTRY }}
-          username: ${{ vars.REGISTRY_USERNAME || github.actor }}
-          password: ${{ secrets.REGISTRY_TOKEN || secrets.GITHUB_TOKEN }}
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ vars.REGISTRY || env.REGISTRY }}
+        username: ${{ vars.REGISTRY_USERNAME || github.actor }}
+        password: ${{ secrets.REGISTRY_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Generate metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ vars.REGISTRY_PREFIX || env.REGISTRY_PREFIX }}/${{ matrix.project }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=ref,event=tag
-            type=raw,value=latest,enable={{is_default_branch}}
-          labels: |
-            org.opencontainers.image.title=${{ matrix.project }}
-            org.opencontainers.image.description=Docker Network Toolkit - ${{ matrix.project }}
-            org.opencontainers.image.vendor=titom73
+    - name: Generate metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ vars.REGISTRY_PREFIX || env.REGISTRY_PREFIX }}/${{ matrix.project }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=ref,event=tag
+          type=raw,value=latest,enable={{is_default_branch}}
+        labels: |
+          org.opencontainers.image.title=${{ matrix.project }}
+          org.opencontainers.image.description=Docker Network Toolkit - ${{ matrix.project }}
+          org.opencontainers.image.vendor=titom73
 
-      - name: Check if Dockerfile exists
-        id: dockerfile-check
-        run: |
-          if [ -f "${{ matrix.project }}/Dockerfile" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Dockerfile found for ${{ matrix.project }}"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "❌ No Dockerfile found for ${{ matrix.project }}"
-            exit 1
-          fi
+    - name: Check if Dockerfile exists
+      id: dockerfile-check
+      run: |
+        if [ -f "${{ matrix.project }}/Dockerfile" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "✅ Dockerfile found for ${{ matrix.project }}"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "❌ No Dockerfile found for ${{ matrix.project }}"
+          exit 1
+        fi
 
-      - name: Build and push Docker image
-        if: steps.dockerfile-check.outputs.exists == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ matrix.project }}
-          file: ${{ matrix.project }}/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    - name: Build and push Docker image
+      if: steps.dockerfile-check.outputs.exists == 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ matrix.project }}
+        file: ${{ matrix.project }}/Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-      - name: Update README on GitHub Container Registry
-        if: steps.dockerfile-check.outputs.exists == 'true' && github.ref == 'refs/heads/main'
-        continue-on-error: true
-        run: |
-          if [ -f "${{ matrix.project }}/README.md" ]; then
-            echo "📝 README found for ${{ matrix.project }}, but GitHub Container Registry doesn't support automated README updates"
-          else
-            echo "📝 No README found for ${{ matrix.project }}"
-          fi
+    - name: Update README on GitHub Container Registry
+      if: steps.dockerfile-check.outputs.exists == 'true' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      run: |
+        if [ -f "${{ matrix.project }}/README.md" ]; then
+          echo "📝 README found for ${{ matrix.project }}, but GitHub Container Registry doesn't support automated README updates"
+        else
+          echo "📝 No README found for ${{ matrix.project }}"
+        fi
 
   # Summary job
   build-summary:
-    needs: [detect-changes, build-and-push]
+    needs: [ detect-changes, build-and-push ]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Summary
-        run: |
-          echo "## 🚀 Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+    - name: Summary
+      run: |
+        echo "## 🚀 Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "${{ needs.detect-changes.outputs.projects }}" != "[]" ]; then
-            echo "### Built Projects" >> $GITHUB_STEP_SUMMARY
-            echo '${{ needs.detect-changes.outputs.projects }}' | jq -r '.[]' | while read project; do
-              if [ "${{ needs.build-and-push.result }}" == "success" ]; then
-                echo "- ✅ **$project** - Built successfully" >> $GITHUB_STEP_SUMMARY
-              else
-                echo "- ❌ **$project** - Build failed" >> $GITHUB_STEP_SUMMARY
-              fi
-            done
-          else
-            echo "- 🔍 No changes detected, no builds triggered" >> $GITHUB_STEP_SUMMARY
-          fi
+        if [ "${{ needs.detect-changes.outputs.projects }}" != "[]" ]; then
+          echo "### Built Projects" >> $GITHUB_STEP_SUMMARY
+          echo '${{ needs.detect-changes.outputs.projects }}' | jq -r '.[]' | while read project; do
+            if [ "${{ needs.build-and-push.result }}" == "success" ]; then
+              echo "- ✅ **$project** - Built successfully" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- ❌ **$project** - Build failed" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+        else
+          echo "- 🔍 No changes detected, no builds triggered" >> $GITHUB_STEP_SUMMARY
+        fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Registry" >> $GITHUB_STEP_SUMMARY
-          echo "Images are published to: \`${{ env.REGISTRY_PREFIX }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🏷️ Tags" >> $GITHUB_STEP_SUMMARY
-          echo "- **latest**: Latest version from main branch" >> $GITHUB_STEP_SUMMARY
-          echo "- **main**: Latest commit on main branch" >> $GITHUB_STEP_SUMMARY
-          echo "- **v***: Git tag versions" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Registry" >> $GITHUB_STEP_SUMMARY
+        echo "Images are published to: \`${{ env.REGISTRY_PREFIX }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🏷️ Tags" >> $GITHUB_STEP_SUMMARY
+        echo "- **latest**: Latest version from main branch" >> $GITHUB_STEP_SUMMARY
+        echo "- **main**: Latest commit on main branch" >> $GITHUB_STEP_SUMMARY
+        echo "- **v***: Git tag versions" >> $GITHUB_STEP_SUMMARY
