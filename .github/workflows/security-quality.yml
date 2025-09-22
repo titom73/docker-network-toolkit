@@ -132,7 +132,7 @@ jobs:
 
     - name: Lint Dockerfile with hadolint
       if: steps.dockerfile-check.outputs.exists == 'true'
-      uses: hadolint/hadolint-action@v3.1.0
+      uses: hadolint/hadolint-action@v3.3.0
       with:
         dockerfile: ${{ matrix.project }}/Dockerfile
         format: sarif
