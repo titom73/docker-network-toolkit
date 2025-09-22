@@ -152,7 +152,7 @@ jobs:
 
     - name: Build image for security scanning
       if: steps.dockerfile-check.outputs.exists == 'true'
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ${{ matrix.project }}
         file: ${{ matrix.project }}/Dockerfile
