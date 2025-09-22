@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: Delete old images
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ matrix.project }}
           package-type: container
