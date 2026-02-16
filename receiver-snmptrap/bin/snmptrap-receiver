@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+"""
+SNMP Trap Receiver - A simple SNMP trap receiver for demo and lab purposes.
+Receives SNMP traps (v1/v2c) and displays them in a human-readable format.
+"""
+
+import argparse
+import sys
+from datetime import datetime
+
+from pysnmp.carrier.asyncio.dgram import udp
+from pysnmp.entity import engine, config
+from pysnmp.entity.rfc3413 import ntfrcv
+
+
+def trap_callback(snmp_engine, state_reference, context_engine_id,
+                  context_name, var_binds, cb_ctx):  # noqa: E501
+    """Callback function executed when a trap is received."""
+    # Get transport info (using legacy API as it's more reliable)
+    try:
+        # Try new API first
+        transport_info = snmp_engine.message_dispatcher.get_transport_info(
+            state_reference
+        )
+        transport_address = transport_info[1] if transport_info else ("unknown", 0)
+    except (AttributeError, TypeError):
+        # Fallback: try legacy API
+        try:
+            # pylint: disable=no-member
+            transport_info = snmp_engine.msgAndPduDsp.getTransportInfo(
+                state_reference
+            )
+            transport_address = transport_info[1] if transport_info else ("unknown", 0)
+        except (AttributeError, TypeError):
+            transport_address = ("unknown", 0)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    source_ip = transport_address[0]
+    source_port = transport_address[1]
+
+    print("\n" + "═" * 70)
+    print(f"📥 SNMP Trap received at {timestamp}")
+    print("─" * 70)
+    print(f"  Source: {source_ip}:{source_port}")
+    print("─" * 70)
+    print("  Variable Bindings:")
+
+    for oid, val in var_binds:
+        oid_str = oid.prettyPrint()
+        val_str = val.prettyPrint()
+
+        # Try to provide context for well-known OIDs
+        oid_name = get_oid_name(oid_str)
+        if oid_name:
+            print(f"    {oid_str}")
+            print(f"      ({oid_name})")
+            print(f"      = {val_str}")
+        else:
+            print(f"    {oid_str} = {val_str}")
+
+    print("═" * 70)
+    sys.stdout.flush()
+
+
+def get_oid_name(oid_str):
+    """Return a human-readable name for well-known OIDs."""
+    known_oids = {
+        "1.3.6.1.2.1.1.3.0": "sysUpTime",
+        "1.3.6.1.6.3.1.1.4.1.0": "snmpTrapOID",
+        "1.3.6.1.6.3.1.1.4.3.0": "snmpTrapEnterprise",
+        "1.3.6.1.6.3.18.1.3.0": "snmpTrapAddress",
+        "1.3.6.1.6.3.18.1.4.0": "snmpTrapCommunity",
+        "1.3.6.1.4.1.8072.2.3.0.1": "netSnmpExampleHeartbeatNotification",
+        "1.3.6.1.6.3.1.1.5.1": "coldStart",
+        "1.3.6.1.6.3.1.1.5.2": "warmStart",
+        "1.3.6.1.6.3.1.1.5.3": "linkDown",
+        "1.3.6.1.6.3.1.1.5.4": "linkUp",
+        "1.3.6.1.6.3.1.1.5.5": "authenticationFailure",
+    }
+    return known_oids.get(oid_str)
+
+
+def read_cli():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="SNMP Trap Receiver - Listens for SNMP traps"
+    )
+    parser.add_argument(
+        "--port", "-p",
+        type=int,
+        default=162,
+        help="UDP port to listen on (default: 162)"
+    )
+    parser.add_argument(
+        "--community", "-c",
+        type=str,
+        default="public",
+        help="SNMP community string (default: public)"
+    )
+    parser.add_argument(
+        "--debug", "-d",
+        action="store_true",
+        help="Enable debug mode"
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main entry point."""
+    cli = read_cli()
+
+    print("=" * 70)
+    print("🔊 SNMP Trap Receiver")
+    print("=" * 70)
+    print(f"  Listening on:  0.0.0.0:{cli.port}/udp")
+    print(f"  Community:     {cli.community}")
+    print(f"  Debug mode:    {'enabled' if cli.debug else 'disabled'}")
+    print("=" * 70)
+    print("Waiting for traps...")
+    sys.stdout.flush()
+
+    # Create SNMP engine
+    snmp_engine = engine.SnmpEngine()
+
+    # Transport setup - listen on UDP
+    config.add_transport(
+        snmp_engine,
+        udp.DOMAIN_NAME,
+        udp.UdpTransport().open_server_mode(("0.0.0.0", cli.port))
+    )
+
+    # SNMPv1/v2c community setup
+    config.add_v1_system(snmp_engine, "my-area", cli.community)
+
+    # Register callback for trap notifications
+    ntfrcv.NotificationReceiver(snmp_engine, trap_callback)
+
+    # Run the dispatcher
+    snmp_engine.transport_dispatcher.job_started(1)
+
+    try:
+        snmp_engine.transport_dispatcher.run_dispatcher()
+    except KeyboardInterrupt:
+        print("\n\n👋 Shutting down SNMP Trap Receiver...")
+    finally:
+        snmp_engine.transport_dispatcher.close_dispatcher()
+
+
+if __name__ == "__main__":
+    main()

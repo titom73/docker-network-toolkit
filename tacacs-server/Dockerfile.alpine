@@ -14,7 +14,7 @@ COPY  $SRC_VERSION.tar.gz /tac_plus.tar.gz
 RUN echo "${SRC_HASH}  /tac_plus.tar.gz" | sha256sum -c -
 
 RUN apk update && \
-    apk add build-base bzip2 perl perl-digest-md5 perl-ldap perl-io-socket-ssl bash tcpdump && \
+    apk add build-base bzip2 perl perl-digest-md5 perl-ldap perl-io-socket-ssl bash && \
     tar -xzf /tac_plus.tar.gz && \
     ls && \
     cd /event-driven-servers-$SRC_VERSION && \
