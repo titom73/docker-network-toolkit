@@ -27,15 +27,16 @@ make push-all
 cd tacacs-server && make alpine   # or: make ubuntu
 cd tacacs-server && make all      # builds both, then tags
 
-# Override registry/namespace/tag
+# Override registry/namespace/tag (example: build for GitHub instead of default Forgejo)
 make build REGISTRY=ghcr.io NAMESPACE=titom73 IMAGE_TAG=v1.0
 ```
 
 ## Repository Structure
 
 All images are published to **two registries**:
-- **GitHub Container Registry**: `ghcr.io/titom73/*`
-- **Forgejo Container Registry**: `git.as73.inetsix.net/docker/*`
+
+- **Forgejo Container Registry (Default)**: `git.as73.inetsix.net/docker/*` - Private registry for development
+- **GitHub Container Registry (Public)**: `ghcr.io/titom73/*` - Public registry for distribution
 
 | Directory | GitHub Image | Forgejo Image | Base | Purpose |
 |---|---|---|---|---|
@@ -50,7 +51,8 @@ All images are published to **two registries**:
 ## Key Conventions
 
 - **Dual-Hosting:** Repository is mirrored on GitHub (public) and Forgejo at `git.as73.inetsix.net` (private).
-- **Dual-Registry:** All images are published to both `ghcr.io/titom73/*` (GitHub) and `git.as73.inetsix.net/docker/*` (Forgejo).
+- **Dual-Registry:** All images are published to both `git.as73.inetsix.net/docker/*` (Forgejo - default) and `ghcr.io/titom73/*` (GitHub - public).
+- **Default Registry:** Forgejo (`git.as73.inetsix.net/docker/*`) is the default for local builds. Use `make push-github` to push to GitHub.
 - **Makefile Variables:** All Makefiles support `REGISTRY`, `NAMESPACE`, `IMAGE_BASE_NAME`, `IMAGE_TAG`, and `BUILD_ARGS` for flexible builds.
 - **OCI Labels:** All Dockerfiles use standardized `org.opencontainers.image.*` labels with `SOURCE_REPO_URL` ARG for dual-hosting support.
 - **Containerlab topologies:** Each image has a `.clab.yml` or `containerlabs.yml` file for testing with ContainerLab.

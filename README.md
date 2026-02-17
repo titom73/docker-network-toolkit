@@ -140,10 +140,12 @@ docker pull git.as73.inetsix.net/docker/snmptrap-receiver:latest
 
 ## Building Locally
 
+**Default registry**: Forgejo (`git.as73.inetsix.net/docker/*`)
+
 Each image has its own `Makefile` with dual-registry support:
 
 ```bash
-# Build locally
+# Build locally (uses Forgejo registry by default)
 cd <image-directory>
 make build
 
@@ -156,7 +158,7 @@ make push-forgejo
 # Push to both registries
 make push-all
 
-# Override registry/namespace
+# Override registry/namespace (example: build for GitHub)
 make build REGISTRY=ghcr.io NAMESPACE=titom73 IMAGE_TAG=v1.0
 ```
 
