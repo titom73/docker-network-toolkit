@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  syslog:
+    image: git.as73.inetsix.net/docker/syslog-ng:latest
+    container_name: syslog-server
+    ports:
+      - "514:514/udp"
+      - "6601:601/tcp"
+    volumes:
+      - ${HOME}/logs:/var/log
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  webhook:
+    image: git.as73.inetsix.net/docker/webhook-receiver:latest
+    container_name: webhook-receiver
+    ports:
+      - "8282:80"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  snmptrap:
+    image: git.as73.inetsix.net/docker/snmptrap-receiver:latest
+    container_name: snmptrap-receiver
+    network_mode: host
+    command: bin/snmptrap-receiver --port 1162 --community public
+    restart: unless-stopped
+
+networks:
+  monitoring:
+    driver: bridge
+
