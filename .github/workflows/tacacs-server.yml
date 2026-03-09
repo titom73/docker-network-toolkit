@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Ubuntu image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: tacacs-server/
           file: tacacs-server/Dockerfile
@@ -46,7 +46,7 @@ jobs:
             SOURCE_REPO_URL=https://github.com/titom73/docker-network-toolkit
 
       - name: Build and push Alpine image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: tacacs-server/
           file: tacacs-server/Dockerfile.alpine
