@@ -15,7 +15,7 @@ ARG PASSWORD
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
 RUN     apk update \
     &&  apk add apache2-utils bash bind-tools busybox-extras curl ethtool git \
-                iperf3 iproute2 iputils jq lftp mtr mysql-client \
+                iperf iperf3 iproute2 iputils jq lftp mtr mysql-client \
                 netcat-openbsd net-tools nginx  tmux screen nmap openssh-client openssl \
                 perl-net-telnet postgresql-client procps rsync socat tcpdump \
                 tshark wget openssh libteam open-lldp tcptraceroute freeradius-utils wpa_supplicant lldpd zsh\
